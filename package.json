@@ -1,6 +1,6 @@
 {
   "name": "wiki-plugin-family",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Federated Wiki - Family Plugin — gather configurable families of related wiki sites (sisters, parent, children, farm, neighbourhood) into your neighborhood",
   "type": "module",
   "main": "client/family.js",

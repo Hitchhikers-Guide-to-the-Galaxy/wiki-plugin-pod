@@ -5,9 +5,18 @@
 // where peers were computed from the farm root rather than per-site.
 //
 // Started on the `running-serv` event with { argv, app }.
+//
+// NOTE: authored as CommonJS on purpose. wiki-server loads a plugin's
+// server/server.js with require() (older releases) or import() (newer); CJS
+// is the only format that works under BOTH, on every Node version. An ESM
+// server.js throws ERR_REQUIRE_ESM on the require() loader (Node < 22.12),
+// and the wiki swallows that error, so the plugin's routes silently vanish.
+// The sibling server/package.json ({"type":"commonjs"}) makes Node treat this
+// file as CJS even though the plugin's root package.json is "type":"module",
+// so the rest of the plugin (src/, tests, build) can stay ESM.
 
-import fs from 'node:fs/promises'
-import path from 'node:path'
+const fs = require('node:fs/promises')
+const path = require('node:path')
 
 const startServer = ({ argv, app }) => {
   // argv.status = {farmRoot}/{thisDomain}/status
@@ -67,4 +76,4 @@ const startServer = ({ argv, app }) => {
   })
 }
 
-export { startServer }
+module.exports = { startServer }

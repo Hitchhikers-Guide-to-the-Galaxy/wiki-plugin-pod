@@ -200,11 +200,25 @@ export const emit = (div, item) => {
 
   fetch(`/plugin/family/roll?kinds=${encodeURIComponent(serverKinds.join(','))}`)
     .then(res => {
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      if (!res.ok) {
+        const err = new Error(`HTTP ${res.status}`)
+        err.status = res.status
+        throw err
+      }
       return res.json()
     })
     .then(data => render(data.groups || {}))
-    .catch(() => div.find('.caption').first().text('server error'))
+    .catch(err => {
+      // A 404 means the plugin's server component never registered its route —
+      // almost always an old wiki-server / Node combination that couldn't load
+      // server/server.js (see this plugin's server notes). Say so, rather than a
+      // generic error, so the operator knows where to look.
+      const msg =
+        err && err.status === 404
+          ? 'family server not loaded — the host wiki may need a restart or a newer wiki-server / Node'
+          : 'server error'
+      div.find('.caption').first().text(msg)
+    })
 }
 
 export const bind = (div, item) => {
