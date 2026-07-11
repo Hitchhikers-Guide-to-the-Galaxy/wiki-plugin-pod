@@ -29,7 +29,8 @@ const startServer = ({ argv, app }) => {
   const selectors = {
     sisters: name => name !== origin && domainOf(name) === parentDomain,
     parent: name => parentDomain !== '' && name === parentDomain,
-    children: name => name !== origin && name.endsWith('.' + origin),
+    children: name => domainOf(name) === origin,
+    descendants: name => name !== origin && name.endsWith('.' + origin),
     farm: name => name !== origin,
   }
 

@@ -9,7 +9,8 @@
 // Recognised keywords (one per line, in item.text):
 //   sisters        sibling sites sharing the parent domain   (server)
 //   parent         the parent-domain site itself             (server)
-//   children       sub-domains of this site                  (server)
+//   children       direct sub-domains of this site           (server)
+//   descendants    all sub-domains, any depth                (server)
 //   farm           every wiki in the farm                    (server)
 //   neighbourhood  the sites currently in your neighborhood  (client)
 //   snapshot       freeze the current neighborhood           (client, v0.1 == neighbourhood)
@@ -18,12 +19,13 @@
 //   FREEZE         show a button that saves the gathered family as a roster
 //                  ghost page (one roster item per kind). Read-side, no server.
 
-const SERVER_KINDS = ['sisters', 'parent', 'children', 'farm']
+const SERVER_KINDS = ['sisters', 'parent', 'children', 'descendants', 'farm']
 const CLIENT_KINDS = ['neighbourhood', 'snapshot']
 const LABEL = {
   sisters: 'Sisters',
   parent: 'Parent',
   children: 'Children',
+  descendants: 'Descendants',
   farm: 'Farm',
   neighbourhood: 'Neighbourhood',
   snapshot: 'Snapshot',
@@ -65,6 +67,7 @@ const COMMANDS = {
   SISTERS: 'sisters',
   PARENT: 'parent',
   CHILDREN: 'children',
+  DESCENDANTS: 'descendants',
   FARM: 'farm',
   NEIGHBOURHOOD: 'neighbourhood',
   NEIGHBORHOOD: 'neighbourhood', // accept either spelling
@@ -96,9 +99,17 @@ const parseKinds = text => {
   return kinds.length ? kinds : ['sisters']
 }
 
+// Display name for a site row. Descendants of the viewing site keep their
+// whole relative name (david.pod.peoplepowered.money seen from
+// peoplepowered.money → "david.pod"); everything else shows its first label.
+const shortName = site =>
+  site.endsWith('.' + location.hostname)
+    ? site.slice(0, -(location.hostname.length + 1))
+    : site.split('.')[0]
+
 const rowHtml = (site, pages, sitemap) => {
   const suffix = portSuffix()
-  const short = site.split('.')[0]
+  const short = shortName(site)
   const img =
     `<img class=remote title="${site}${suffix}" src="//${site}${suffix}/favicon.png" ` +
     `data-site="${site}${suffix}" data-slug=welcome-visitors>`

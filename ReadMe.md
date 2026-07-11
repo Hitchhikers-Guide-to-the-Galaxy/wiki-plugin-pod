@@ -17,7 +17,8 @@ a single trailing colon (YAML-style) is optional.
 | `FAMILY` | `PARENT` + `SISTERS` together (shorthand) | server |
 | `SISTERS` | sibling sites sharing the parent domain | server |
 | `PARENT` | the parent-domain site itself | server |
-| `CHILDREN` | sub-domains of this site | server |
+| `CHILDREN` | direct sub-domains of this site | server |
+| `DESCENDANTS` | all sub-domains, any depth | server |
 | `FARM` | every wiki in the farm | server |
 | `NEIGHBOURHOOD` | the sites currently in your neighborhood | client |
 | `SNAPSHOT` | freeze the current neighborhood (v0.1 == NEIGHBOURHOOD) | client |
