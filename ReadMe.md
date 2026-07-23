@@ -29,6 +29,29 @@ Example item text:
 FAMILY
 ```
 
+## Actions
+
+Actions are not site-kinds — they change what the panel *does* with the family
+it gathered. Add one on its own line alongside the kind commands.
+
+| Action | Effect |
+|---|---|
+| `FREEZE` | show a button that saves the gathered family as a **roster** ghost page (one roster item per kind) |
+| `FORK` | filter each gathered family down to the members whose sitemap already holds **this page's slug** — who in your family has *forked* the page you are viewing |
+
+`FORK` is an **existence-only** check, exactly like the wiki-client *Twins*
+strip: a slug match in the family member's sitemap, with no journal or lineage
+inspection. A group with no match is omitted entirely, so the panel only grows
+an element when a family member has actually forked the page. Each fork row's
+flag links straight to that member's copy of the page.
+
+Example — watch who among your sisters has forked the page you're on:
+
+```
+SISTERS
+FORK
+```
+
 ## Build
 
 ```

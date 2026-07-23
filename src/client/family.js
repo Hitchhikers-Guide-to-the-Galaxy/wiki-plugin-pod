@@ -15,9 +15,14 @@
 //   neighbourhood  the sites currently in your neighborhood  (client)
 //   snapshot       freeze the current neighborhood           (client, v0.1 == neighbourhood)
 //
-// Action (not a site-kind):
+// Actions (not site-kinds):
 //   FREEZE         show a button that saves the gathered family as a roster
 //                  ghost page (one roster item per kind). Read-side, no server.
+//   FORK           filter each gathered family down to the members whose sitemap
+//                  already holds THIS page's slug — who in your family has forked
+//                  (twinned) the page you are viewing. Existence-only: a slug
+//                  match in the neighbour's sitemap, exactly like the wiki-client
+//                  Twins strip — no journal or lineage check.
 
 const SERVER_KINDS = ['sisters', 'parent', 'children', 'descendants', 'farm']
 const CLIENT_KINDS = ['neighbourhood', 'snapshot']
@@ -83,6 +88,18 @@ const parseFreeze = text =>
     return key === 'FREEZE'
   })
 
+// FORK — like FREEZE, an action rather than a site-kind. When present the panel
+// stops listing every family member and instead lists only those whose sitemap
+// already holds a page with THIS page's slug — i.e. who in your family has
+// forked (twinned) the page you are viewing. Existence-only, à la the
+// wiki-client Twins strip: a slug match in the neighbour's sitemap, with no
+// journal or lineage inspection.
+const parseFork = text =>
+  (text || '').split('\n').some(raw => {
+    const key = raw.trim().split(/\s+/)[0].replace(/:$/, '').toUpperCase()
+    return key === 'FORK'
+  })
+
 // item.text -> ordered, de-duplicated list of recognised kinds (default: sisters).
 // Each line: first word is the command; UPPERCASE is canonical, but input case is
 // forgiven, and a single trailing colon (YAML-style) is optional.
@@ -107,12 +124,12 @@ const shortName = site =>
     ? site.slice(0, -(location.hostname.length + 1))
     : site.split('.')[0]
 
-const rowHtml = (site, pages, sitemap) => {
+const rowHtml = (site, pages, sitemap, slug = 'welcome-visitors') => {
   const suffix = portSuffix()
   const short = shortName(site)
   const img =
     `<img class=remote title="${site}${suffix}" src="//${site}${suffix}/favicon.png" ` +
-    `data-site="${site}${suffix}" data-slug=welcome-visitors>`
+    `data-site="${site}${suffix}" data-slug="${slug}">`
   return (
     `<tr><td align=right>${short} ${img}` +
     `<td data-site="${site}${suffix}">${pages} pages ${freshness(sitemap)}`
@@ -127,9 +144,20 @@ export const emit = (div, item) => {
   const suffix = portSuffix()
   const kinds = parseKinds(item.text)
   const freeze = parseFreeze(item.text)
+  const fork = parseFork(item.text)
+  // slug of the page hosting this item — what FORK matches against, the way
+  // Twins matches the viewing page's slug across the neighbourhood.
+  const slug = div.closest('.page').data('key')
   // gathered family, captured during render so the Freeze button can reuse it:
   // kind -> ordered list of full domain names
   const gathered = {}
+
+  // Existence-only fork test: does this neighbour's already-loaded sitemap hold
+  // a page with our slug? (Twins' inner test — no journal, no lineage.)
+  const hasFork = key => {
+    const sm = wiki.neighborhood[key]?.sitemap
+    return Array.isArray(sm) && sm.some(p => p.slug === slug)
+  }
 
   if (div.closest('.page').hasClass('remote')) {
     div.html(
@@ -145,29 +173,53 @@ export const emit = (div, item) => {
   )
 
   const render = serverGroups => {
-    const html = []
+    // Candidate family members per kind, as neighbourhood lookup keys (with the
+    // port suffix). Server kinds are registered once here so their sitemaps load;
+    // FORK later filters these candidates down to the members that hold our slug.
+    const candidates = {}
     for (const kind of kinds) {
       if (SERVER_KINDS.includes(kind)) {
         const roll = serverGroups[kind] || []
         gathered[kind] = roll.map(r => r.site)
-        const rows = roll.map(r => {
-          wiki.neighborhoodObject.registerNeighbor(r.site + suffix)
-          return rowHtml(r.site, r.pages, wiki.neighborhood[r.site + suffix]?.sitemap)
-        })
-        html.push(groupHtml(kind, rows.length ? rows : ['<tr><td><i>none</i>']))
+        candidates[kind] = roll.map(r => r.site + suffix)
+        for (const key of candidates[kind]) wiki.neighborhoodObject.registerNeighbor(key)
       } else {
         // neighbourhood / snapshot — read the live in-browser neighbourhood
         const sites = Object.keys(wiki.neighborhood)
         gathered[kind] = sites
-        const rows = sites.map(site => {
-          const sm = wiki.neighborhood[site]?.sitemap
-          return rowHtml(site, sm ? sm.length : 0, sm)
-        })
-        html.push(groupHtml(kind, rows.length ? rows : ['<tr><td><i>empty</i>']))
+        candidates[kind] = sites
       }
     }
-    div.find('.groups').html(html.join('\n'))
-    div.find('.caption').first().text('just updated')
+
+    // Build every group's HTML from the CURRENT neighbourhood state. Sitemaps
+    // arrive asynchronously, so this is re-run as neighbours finish loading —
+    // which in FORK mode is when the matches reveal themselves. When FORK is on,
+    // a group with no matching member is omitted entirely, so the panel only
+    // grows an element when a family member has actually forked the page.
+    const buildGroups = () => {
+      const html = []
+      for (const kind of kinds) {
+        const keys = fork ? candidates[kind].filter(hasFork) : candidates[kind]
+        if (fork && keys.length === 0) continue
+        const rows = keys.map(key => {
+          const bare = suffix && key.endsWith(suffix) ? key.slice(0, -suffix.length) : key
+          const sm = wiki.neighborhood[key]?.sitemap
+          return rowHtml(bare, sm ? sm.length : 0, sm, fork ? slug : 'welcome-visitors')
+        })
+        const empty = SERVER_KINDS.includes(kind) ? '<tr><td><i>none</i>' : '<tr><td><i>empty</i>'
+        html.push(groupHtml(kind, rows.length ? rows : [empty]))
+      }
+      return html.join('\n')
+    }
+
+    const paint = () => {
+      const g = buildGroups()
+      div.find('.groups').html(g)
+      div.find('.caption').first().text(
+        fork ? (g ? 'forks in your family' : 'no family forks yet') : 'just updated',
+      )
+    }
+    paint()
 
     // FREEZE — turn the gathered family into a saved roster ghost page.
     if (freeze) {
@@ -194,8 +246,11 @@ export const emit = (div, item) => {
       div.find('.family').append(btn)
     }
 
-    // fill page counts / freshness as neighbors finish loading their sitemaps
+    // As each neighbour's sitemap loads: in FORK mode repaint, since a match may
+    // have just appeared (or a member that now has our slug); otherwise just
+    // backfill that member's page-count / freshness cell.
     $('body').on('new-neighbor-done', (e, site) => {
+      if (fork) return paint()
       const cell = div.find(`td[data-site="${site}"]`)
       if (!cell.length) return
       const sm = wiki.neighborhood[site]?.sitemap
