@@ -16,18 +16,25 @@
 //   snapshot       freeze the current neighborhood           (client, v0.1 == neighbourhood)
 //
 // Actions (not site-kinds):
-//   FREEZE         show a button that saves the gathered family as a roster
-//                  ghost page (one roster item per kind). Read-side, no server.
+//   ROSTER         draw the gathered family compactly, mirroring a normal roster
+//                  item — a left-aligned "<commands> Rosters" title over flowing
+//                  `img.remote` flags in the grey box, instead of the wide
+//                  tables. A ❄ corner icon saves it as a roster ghost page.
+//   TITLE yes|no   whether the ROSTER title shows (default yes). TITLE no hides
+//                  it, leaving even padding around the flags.
 //   TWIN           show a roster of the family members that hold a page with
 //                  THIS page's slug — existence-only, exactly like the
 //                  wiki-client Twins strip: a slug match in the neighbour's
 //                  sitemap, no journal or lineage check.
-//   FORK           stricter TWIN: show only the members whose copy is actually a
-//                  fork of this page — its journal carries a `fork` event.
-//                  Requires fetching each candidate's page JSON.
+//   WATCH          stricter TWIN: show only the members whose copy is actually a
+//                  fork of this page — its journal carries a `fork` event — i.e.
+//                  who is watching (tracking) your page. Fetches each candidate.
 //
-// TWIN and FORK render like a roster item (flowing flags, the (sub)domain in the
-// hover tooltip); each flag links to that member's copy of the page.
+// TWIN and WATCH render like a roster item (flowing flags, the (sub)domain in the
+// hover tooltip); each flag links to that member's copy of the page. ROSTER is
+// the same compact style for the whole (unfiltered) gather. The wider table (no
+// display command) carries a small ❄ icon that saves the roster page too, so
+// there is no separate FREEZE command.
 
 const SERVER_KINDS = ['sisters', 'parent', 'children', 'descendants', 'farm']
 const CLIENT_KINDS = ['neighbourhood', 'snapshot']
@@ -84,16 +91,29 @@ const COMMANDS = {
   SNAPSHOT: 'snapshot',
 }
 
-// Actions are commands that aren't site-kinds — FREEZE, TWIN, FORK. Each is a
-// bare keyword on its own line, so they never pollute the gathered kinds.
-// FREEZE turns the panel into a saved roster ghost page; TWIN and FORK switch
-// the panel to a roster of the family members that hold this page (TWIN by slug,
-// FORK by an actual fork event in the copy's journal).
+// Actions are commands that aren't site-kinds — ROSTER, TWIN, WATCH. Each is a
+// bare keyword on its own line, so they never pollute the gathered kinds. ROSTER
+// draws the whole gather compactly (with a button to save it as a roster page);
+// TWIN and WATCH switch the panel to a roster of the family members that hold
+// this page (TWIN by slug, WATCH by an actual fork event in the copy's journal).
 const hasAction = (text, name) =>
   (text || '').split('\n').some(raw => {
     const key = raw.trim().split(/\s+/)[0].replace(/:$/, '').toUpperCase()
     return key === name
   })
+
+// TITLE <yes|no|true|false|on|off> — whether the ROSTER display shows its title
+// caption. Default: shown. A falsey value hides it (and the edge whitespace stays
+// even, since nothing is left in its place).
+const parseTitle = text => {
+  for (const raw of (text || '').split('\n')) {
+    const parts = raw.trim().split(/\s+/)
+    if (parts[0].replace(/:$/, '').toUpperCase() !== 'TITLE') continue
+    const v = (parts[1] || '').toLowerCase().replace(/:$/, '')
+    return !['no', 'false', 'off', '0', 'hide', 'none'].includes(v)
+  }
+  return true // default: show the title
+}
 
 // item.text -> ordered, de-duplicated list of recognised kinds (default: sisters).
 // Each line: first word is the command; UPPERCASE is canonical, but input case is
@@ -138,16 +158,20 @@ const groupHtml = (kind, rows) =>
 export const emit = (div, item) => {
   const suffix = portSuffix()
   const kinds = parseKinds(item.text)
-  const freeze = hasAction(item.text, 'FREEZE')
-  const fork = hasAction(item.text, 'FORK')
+  const watch = hasAction(item.text, 'WATCH')
   const twin = hasAction(item.text, 'TWIN')
-  const roster = fork || twin // both render as a roster of member flags
-  // slug of the page hosting this item — what TWIN/FORK match against, the way
+  const roster = watch || twin // both render as a (filtered) roster of member flags
+  const rosterCmd = hasAction(item.text, 'ROSTER') // compact display of the whole gather
+  const showTitle = parseTitle(item.text) // TITLE yes/no — show the ROSTER title
+  // Title for the ROSTER caption and the saved roster page — the commands
+  // present, e.g. "SISTERS Rosters" / "PARENT SISTERS Rosters".
+  const rostersTitle = `${kinds.map(k => k.toUpperCase()).join(' ')} Rosters`
+  // slug of the page hosting this item — what TWIN/WATCH match against, the way
   // Twins matches the viewing page's slug across the neighbourhood. The page
   // div's id IS the slug (possibly with a _rev… suffix on a historical view);
   // .data('key') is the lineup key, NOT the slug, so don't use it here.
   const slug = (div.closest('.page').attr('id') || '').split('_rev')[0]
-  // gathered family, captured during render so the Freeze button can reuse it:
+  // gathered family, captured during render so saveRosters() can reuse it:
   // kind -> ordered list of full domain names
   const gathered = {}
 
@@ -158,22 +182,22 @@ export const emit = (div, item) => {
     return Array.isArray(sm) && sm.some(p => p.slug === slug)
   }
 
-  // FORK test — lineage: the member's copy of this page carries a `fork` event in
-  // its journal. Needs the page JSON, so results are fetched lazily and cached
-  // (true/false once resolved, `in` even while the request is in flight). We only
-  // fetch where the sitemap already shows the slug, so a fork check costs one
-  // extra request per actual twin, not per family member.
-  const forkStatus = {}
-  const ensureForkChecked = (key, onDone) => {
-    if (key in forkStatus || !hasTwin(key)) return
-    forkStatus[key] = undefined // in-flight marker
+  // WATCH test — is this member watching us: their copy of this page carries a
+  // `fork` event in its journal (fedwiki's term for a copy taken from ours).
+  // Needs the page JSON, so results are fetched lazily and cached (true/false
+  // once resolved, `in` even while the request is in flight). We only fetch where
+  // the sitemap already shows the slug, so it costs one request per actual twin.
+  const watchStatus = {}
+  const ensureWatchChecked = (key, onDone) => {
+    if (key in watchStatus || !hasTwin(key)) return
+    watchStatus[key] = undefined // in-flight marker
     wiki.site(key).get(`${slug}.json`, (err, page) => {
-      forkStatus[key] =
+      watchStatus[key] =
         !err && Array.isArray(page?.journal) && page.journal.some(a => a?.type === 'fork')
       onDone()
     })
   }
-  const matches = key => (fork ? forkStatus[key] === true : hasTwin(key))
+  const matches = key => (watch ? watchStatus[key] === true : hasTwin(key))
 
   if (div.closest('.page').hasClass('remote')) {
     div.html(
@@ -183,15 +207,22 @@ export const emit = (div, item) => {
     return
   }
 
+  // The flag-display modes (ROSTER / TWIN / WATCH) carry their own caption, so
+  // skip echoing the raw command text; the table keeps its echo. ROSTER also
+  // drops the centred `.caption` line entirely — it renders its own left-aligned
+  // title inside `.groups`, mirroring a roster item, so the box padding stays
+  // even (important when TITLE is off).
+  const echo = roster || rosterCmd ? '' : `<center>${expand(item.text)}`
+  const status = rosterCmd ? '' : `<p class=caption>gathering…</p>`
   div.html(
-    `<div class=family style="background-color:#eee;padding:15px"><center>${expand(item.text)}` +
-    `<p class=caption>gathering…</p><div class=groups></div></div>`,
+    `<div class=family style="position:relative;background-color:#eee;padding:15px">${echo}` +
+    `${status}<div class=groups>${rosterCmd ? '<i>gathering…</i>' : ''}</div></div>`,
   )
 
   const render = serverGroups => {
     // Candidate family members per kind, as neighbourhood lookup keys (with the
     // port suffix). Server kinds are registered once here so their sitemaps load;
-    // FORK later filters these candidates down to the members that hold our slug.
+    // TWIN/WATCH later filter these candidates down to the matching members.
     const candidates = {}
     for (const kind of kinds) {
       if (SERVER_KINDS.includes(kind)) {
@@ -207,10 +238,10 @@ export const emit = (div, item) => {
       }
     }
 
-    // TWIN / FORK render like a roster item: the matching members' flags flowing
+    // TWIN / WATCH render like a roster item: the matching members' flags flowing
     // inline, deduplicated across kinds, each linking to that member's copy of
     // THIS page. No titles are shown (every copy is the same page) — the
-    // (sub)domain lives in the hover tooltip. Sitemaps (and, for FORK, the
+    // (sub)domain lives in the hover tooltip. Sitemaps (and, for WATCH, the
     // fetched page journals) arrive asynchronously, so this is re-run as they
     // resolve, which is when matches reveal themselves.
     const buildRoster = () => {
@@ -218,7 +249,7 @@ export const emit = (div, item) => {
       const flags = []
       for (const kind of kinds) {
         for (const key of candidates[kind]) {
-          if (fork) ensureForkChecked(key, paint) // lazily confirm the fork event
+          if (watch) ensureWatchChecked(key, paint) // lazily confirm the fork event
           if (seen.has(key) || !matches(key)) continue
           seen.add(key)
           flags.push(
@@ -228,6 +259,27 @@ export const emit = (div, item) => {
         }
       }
       return flags
+    }
+
+    // ROSTER — the whole gather as one compact roster: a single "<commands>
+    // Rosters" caption (the panel's own .caption) over all members' flags. The
+    // markup mirrors the wiki-plugin-roster item exactly: space-separated
+    // `img.remote` flags in the panel's grey box — no extra wrapper — each
+    // linking to that member's welcome page. The ❄ icon saves it as a page.
+    const buildRosterDisplay = () => {
+      const seen = new Set()
+      const flags = []
+      for (const kind of kinds) {
+        for (const key of candidates[kind]) {
+          if (seen.has(key)) continue
+          seen.add(key)
+          flags.push(
+            `<img class="remote" src="${wiki.site(key).flag()}" ` +
+            `title="${key}" data-site="${key}" data-slug="welcome-visitors">`,
+          )
+        }
+      }
+      return flags.join(' ') || '<i>none</i>'
     }
 
     // Non-roster: the full family tables (favicon + name + page count + freshness).
@@ -247,11 +299,20 @@ export const emit = (div, item) => {
 
     const paint = () => {
       if (roster) {
+        // TWIN / WATCH — flat, filtered flags
         const flags = buildRoster()
         div.find('.groups').html(flags.join(' '))
         div.find('.caption').first().text(
-          flags.length ? '' : fork ? 'no family forks yet' : 'no family twins yet',
+          flags.length ? '' : watch ? 'no family watchers yet' : 'no family twins yet',
         )
+        return
+      }
+      if (rosterCmd) {
+        // Mirror a roster item: an optional left-aligned title, then a <br>, then
+        // the flags — all in the panel's grey box. TITLE off → flags only, even
+        // padding all round.
+        const title = showTitle ? `${rostersTitle} <br> ` : ''
+        div.find('.groups').html(title + buildRosterDisplay())
         return
       }
       div.find('.groups').html(buildGroups())
@@ -259,34 +320,40 @@ export const emit = (div, item) => {
     }
     paint()
 
-    // FREEZE — turn the gathered family into a saved roster ghost page.
-    if (freeze) {
-      const short = location.hostname.split('.')[0]
-      const btn = $(
-        '<button class=family-freeze style="margin-top:8px;padding:4px 12px;' +
-        'cursor:pointer;font-size:13px">❄ Freeze</button>',
-      )
-      btn.on('click', () => {
-        const hexId = () =>
-          Math.floor(Math.random() * 0xffffffffffff).toString(16).padStart(12, '0')
-        const story = [{ type: 'markdown', id: hexId(), text: `# ${short} Family` }]
-        for (const kind of kinds) {
-          const domains = gathered[kind] || []
-          story.push({
-            type: 'roster',
-            id: hexId(),
-            text: `${LABEL[kind]} Wikis\n\n${domains.join('\n') || '(none)'}`,
-          })
-        }
-        const page = wiki.newPage({ title: `${short} Family`, story })
-        wiki.showResult(page, { $page: div.parents('.page') })
-      })
-      div.find('.family').append(btn)
+    // Save the gathered family as a roster ghost page titled after the commands
+    // (e.g. "SISTERS Rosters"), one roster item per kind. No FREEZE command any
+    // more: it's reached from the ❄ icon tucked into the corner of the ROSTER
+    // and wide-table views.
+    const saveRosters = () => {
+      const hexId = () =>
+        Math.floor(Math.random() * 0xffffffffffff).toString(16).padStart(12, '0')
+      const story = [{ type: 'markdown', id: hexId(), text: `# ${rostersTitle}` }]
+      for (const kind of kinds) {
+        const domains = gathered[kind] || []
+        story.push({
+          type: 'roster',
+          id: hexId(),
+          text: `${LABEL[kind]} Wikis\n\n${domains.join('\n') || '(none)'}`,
+        })
+      }
+      const page = wiki.newPage({ title: rostersTitle, story })
+      wiki.showResult(page, { $page: div.parents('.page') })
     }
 
-    // As each neighbour's sitemap loads: in TWIN/FORK mode repaint, since a match
+    // Freeze affordance — a subtle ❄ icon in the panel corner, on the ROSTER and
+    // the wide-table views (TWIN / WATCH are monitoring views, so they get none).
+    if (rosterCmd || !roster) {
+      const icon = $(
+        '<span class=family-freeze-icon title="Display Rosters — save as a roster page" ' +
+        'style="position:absolute;top:6px;right:9px;cursor:pointer;font-size:14px;opacity:.55">❄</span>',
+      )
+      icon.on('click', saveRosters)
+      div.find('.family').append(icon)
+    }
+
+    // As each neighbour's sitemap loads: in TWIN/WATCH mode repaint, since a match
     // may have just appeared (a member whose sitemap now shows our slug — and for
-    // FORK that also kicks off the journal fetch); otherwise just backfill that
+    // WATCH that also kicks off the journal fetch); otherwise just backfill that
     // member's page-count / freshness cell.
     $('body').on('new-neighbor-done', (e, site) => {
       if (roster) return paint()

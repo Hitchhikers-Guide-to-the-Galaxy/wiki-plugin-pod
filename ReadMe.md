@@ -36,26 +36,42 @@ it gathered. Add one on its own line alongside the kind commands.
 
 | Action | Effect |
 |---|---|
-| `FREEZE` | show a button that saves the gathered family as a **roster** ghost page (one roster item per kind) |
-| `TWIN` | show a roster of the family members that hold a page with **this page's slug** |
-| `FORK` | show a roster of the family members whose copy of this page is *actually a fork* of it |
+| `ROSTER` | draw the gather compactly, **mirroring a normal roster item** — a left-aligned "&lt;commands&gt; Rosters" title over flowing flags, instead of the wide table |
+| `TWIN` | show only the members that hold a page with **this page's slug** |
+| `WATCH` | show only the members whose copy of this page is *actually a fork* of it — i.e. who is watching (tracking) your page |
+| `TITLE yes\|no` | whether the `ROSTER` title shows (default `yes`). `TITLE no` hides it, keeping even padding around the flags |
 
-`TWIN` and `FORK` both turn the panel into a compact **roster of flags** — like a
-roster item, the members' flags flow inline, each linking to that member's copy
-of the page, with the (sub)domain shown on hover (no titles, since every copy is
-the same page). They differ only in how strict the match is:
+`ROSTER`, `TWIN` and `WATCH` all render as a compact **roster of flags** — the
+members' `img.remote` flags flow inline in the grey box, each linking to that
+member's copy of the page, the (sub)domain shown on hover. `ROSTER` shows the
+whole gather; `TWIN`/`WATCH` filter it:
 
 - **`TWIN`** is **existence-only**, exactly like the wiki-client *Twins* strip: a
   slug match in the member's sitemap. Cheap — read straight from the neighbourhood.
-- **`FORK`** is **lineage-aware**: it fetches each twin's page JSON and keeps only
-  those whose journal carries a `fork` event. So `FORK ⊆ TWIN` — a page that
+- **`WATCH`** is **lineage-aware**: it fetches each twin's page JSON and keeps only
+  those whose journal carries a `fork` event. So `WATCH ⊆ TWIN` — a page that
   merely shares the name but was authored independently is a twin, not a fork.
 
-Example — watch who among your sisters has forked the page you're on:
+### Saving a roster page
+
+The `ROSTER` view and the wide table both carry a subtle **❄ icon** in the corner
+that saves the gathered family as a **roster ghost page** titled after the
+commands (e.g. `PARENT SISTERS Rosters`), one roster item per kind. (There is no
+separate `FREEZE` command — the icon replaces it.)
+
+Example — watch who among your sisters is tracking the page you're on:
 
 ```
 SISTERS
-FORK
+WATCH
+```
+
+Example — a compact roster of the whole family, no title:
+
+```
+FAMILY
+ROSTER
+TITLE no
 ```
 
 ## Build
