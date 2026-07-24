@@ -37,13 +37,19 @@ it gathered. Add one on its own line alongside the kind commands.
 | Action | Effect |
 |---|---|
 | `FREEZE` | show a button that saves the gathered family as a **roster** ghost page (one roster item per kind) |
-| `FORK` | filter each gathered family down to the members whose sitemap already holds **this page's slug** — who in your family has *forked* the page you are viewing |
+| `TWIN` | show a roster of the family members that hold a page with **this page's slug** |
+| `FORK` | show a roster of the family members whose copy of this page is *actually a fork* of it |
 
-`FORK` is an **existence-only** check, exactly like the wiki-client *Twins*
-strip: a slug match in the family member's sitemap, with no journal or lineage
-inspection. A group with no match is omitted entirely, so the panel only grows
-an element when a family member has actually forked the page. Each fork row's
-flag links straight to that member's copy of the page.
+`TWIN` and `FORK` both turn the panel into a compact **roster of flags** — like a
+roster item, the members' flags flow inline, each linking to that member's copy
+of the page, with the (sub)domain shown on hover (no titles, since every copy is
+the same page). They differ only in how strict the match is:
+
+- **`TWIN`** is **existence-only**, exactly like the wiki-client *Twins* strip: a
+  slug match in the member's sitemap. Cheap — read straight from the neighbourhood.
+- **`FORK`** is **lineage-aware**: it fetches each twin's page JSON and keeps only
+  those whose journal carries a `fork` event. So `FORK ⊆ TWIN` — a page that
+  merely shares the name but was authored independently is a twin, not a fork.
 
 Example — watch who among your sisters has forked the page you're on:
 

@@ -14,12 +14,12 @@
     {
       "type": "markdown",
       "id": "625ddc4e896c6e27",
-      "text": "Write one **command** per line (UPPERCASE, an optional trailing colon — see the [[Fedwiki DSL Skill]] convention):\n\n- `FAMILY` — `PARENT` and `SISTERS` together (shorthand)\n- `SISTERS` — sibling sites sharing the parent domain\n- `PARENT` — the parent-domain site itself\n- `CHILDREN` — direct sub-domains of this site\n- `DESCENDANTS` — all sub-domains, any depth\n- `FARM` — every wiki in the farm\n- `NEIGHBOURHOOD` — the sites currently in your neighborhood\n- `SNAPSHOT` — freeze the current neighborhood *(same as NEIGHBOURHOOD)*\n\nAnd two **actions** (not site-kinds):\n\n- `FREEZE` — show a button that saves the gathered family as a **roster ghost page** (one roster item per kind), so an ephemeral panel becomes a forkable page.\n- `FORK` — filter the gathered family down to the members whose sitemap already holds **this page's slug** — who in your family has *forked* the page you are viewing."
+      "text": "Write one **command** per line (UPPERCASE, an optional trailing colon — see the [[Fedwiki DSL Skill]] convention):\n\n- `FAMILY` — `PARENT` and `SISTERS` together (shorthand)\n- `SISTERS` — sibling sites sharing the parent domain\n- `PARENT` — the parent-domain site itself\n- `CHILDREN` — direct sub-domains of this site\n- `DESCENDANTS` — all sub-domains, any depth\n- `FARM` — every wiki in the farm\n- `NEIGHBOURHOOD` — the sites currently in your neighborhood\n- `SNAPSHOT` — freeze the current neighborhood *(same as NEIGHBOURHOOD)*\n\nAnd the **actions** (not site-kinds):\n\n- `FREEZE` — show a button that saves the gathered family as a **roster ghost page** (one roster item per kind), so an ephemeral panel becomes a forkable page.\n- `TWIN` — show a roster of the family members that hold a page with **this page's slug**.\n- `FORK` — show a roster of the family members whose copy of this page is *actually a fork* of it."
     },
     {
       "type": "markdown",
       "id": "7c1a4e0b9f2d5a86",
-      "text": "### FORK — a fork roster\n\n`FORK` is an **existence-only** check, exactly like the wiki-client *Twins* strip: a slug match in a family member's sitemap, with no journal or lineage inspection. A group with no match is hidden entirely, so the panel only grows an element when a family member has actually forked the page — a quiet way to watch who in your family is twinning your work. Each fork row's flag links straight to that member's copy.\n\n```\nSISTERS\nFORK\n```"
+      "text": "### TWIN and FORK — a roster of who else holds this page\n\nBoth turn the panel into a compact **roster of flags** (like a roster item): the matching members' flags flow inline, each linking to that member's copy of the page, the (sub)domain shown on hover. They differ only in strictness:\n\n- **`TWIN`** is **existence-only**, exactly like the wiki-client *Twins* strip — a slug match in the member's sitemap, read straight from the neighbourhood.\n- **`FORK`** is **lineage-aware** — it fetches each twin's page JSON and keeps only those whose journal carries a `fork` event. So a page that merely shares the name is a *twin*, not a *fork* (`FORK ⊆ TWIN`).\n\n```\nSISTERS\nFORK\n```"
     },
     {
       "type": "markdown",
@@ -100,6 +100,27 @@
       },
       "date": 1784200000000,
       "provenance": "Authored by an AI agent — Claude Code (claude-opus-4-8) adding the FORK action."
+    },
+    {
+      "type": "edit",
+      "id": "625ddc4e896c6e27",
+      "item": {
+        "type": "markdown",
+        "id": "625ddc4e896c6e27",
+        "text": "Write one **command** per line (UPPERCASE, an optional trailing colon — see the [[Fedwiki DSL Skill]] convention):\n\n- `FAMILY` — `PARENT` and `SISTERS` together (shorthand)\n- `SISTERS` — sibling sites sharing the parent domain\n- `PARENT` — the parent-domain site itself\n- `CHILDREN` — direct sub-domains of this site\n- `DESCENDANTS` — all sub-domains, any depth\n- `FARM` — every wiki in the farm\n- `NEIGHBOURHOOD` — the sites currently in your neighborhood\n- `SNAPSHOT` — freeze the current neighborhood *(same as NEIGHBOURHOOD)*\n\nAnd the **actions** (not site-kinds):\n\n- `FREEZE` — show a button that saves the gathered family as a **roster ghost page** (one roster item per kind), so an ephemeral panel becomes a forkable page.\n- `TWIN` — show a roster of the family members that hold a page with **this page's slug**.\n- `FORK` — show a roster of the family members whose copy of this page is *actually a fork* of it."
+      },
+      "date": 1784300000000
+    },
+    {
+      "type": "edit",
+      "id": "7c1a4e0b9f2d5a86",
+      "item": {
+        "type": "markdown",
+        "id": "7c1a4e0b9f2d5a86",
+        "text": "### TWIN and FORK — a roster of who else holds this page\n\nBoth turn the panel into a compact **roster of flags** (like a roster item): the matching members' flags flow inline, each linking to that member's copy of the page, the (sub)domain shown on hover. They differ only in strictness:\n\n- **`TWIN`** is **existence-only**, exactly like the wiki-client *Twins* strip — a slug match in the member's sitemap, read straight from the neighbourhood.\n- **`FORK`** is **lineage-aware** — it fetches each twin's page JSON and keeps only those whose journal carries a `fork` event. So a page that merely shares the name is a *twin*, not a *fork* (`FORK ⊆ TWIN`).\n\n```\nSISTERS\nFORK\n```"
+      },
+      "date": 1784300000000,
+      "provenance": "Authored by an AI agent — Claude Code (claude-opus-4-8) splitting TWIN (existence) from FORK (journal fork event) and switching to a roster-of-flags display."
     }
   ],
   "plugin": "family"
