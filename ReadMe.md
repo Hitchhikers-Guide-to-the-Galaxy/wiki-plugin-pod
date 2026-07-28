@@ -90,3 +90,33 @@ farm laid out as `{farm}/{sub}.{domain}/`. Family derives the origin from the
 ## License
 
 MIT
+
+## The interface it declares
+
+The plugin ships no server of its own for this — it declares a specification and
+a module of plain functions, and the Farm Plugin mounts them:
+
+    GET /system/api/family/roll.json?kinds=children,sisters
+
+The answer depends on the site it is asked at, so `origin` and `farmRoot` are
+declared as context in the specification and supplied by the farm. The plugin's
+own route `/plugin/family/roll` is unchanged and still answers identically.
+
+## One vocabulary
+
+`src/family/commands.js` is the single table of what a family item's text may
+say. The client imports it to parse; the API declaration names it so the farm
+reads the same one. Each command declares which kind it is, because a command
+language is a superset of an interface:
+
+| Kind | Commands | Reaches the farm |
+|---|---|---|
+| parameter | `SISTERS` `PARENT` `CHILDREN` `DESCENDANTS` `FARM` | yes — a value of `kinds` |
+| macro | `FAMILY` | via `PARENT` + `SISTERS` |
+| presentation | `ROSTER` `TITLE` | no — a drawing choice |
+| client-data | `NEIGHBOURHOOD` `SNAPSHOT` `TWIN` `WATCH` | no — only a browser holds it |
+| alias | `NEIGHBORHOOD` | resolves to `NEIGHBOURHOOD` |
+
+The `kinds` parameter's allowed values are derived from that table rather than
+written a second time. `npm test` checks the parser against it; the farm checks
+it against the specification.

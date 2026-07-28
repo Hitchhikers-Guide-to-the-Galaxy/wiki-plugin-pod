@@ -36,17 +36,14 @@
 // display command) carries a small ❄ icon that saves the roster page too, so
 // there is no separate FREEZE command.
 
-const SERVER_KINDS = ['sisters', 'parent', 'children', 'descendants', 'farm']
-const CLIENT_KINDS = ['neighbourhood', 'snapshot']
-const LABEL = {
-  sisters: 'Sisters',
-  parent: 'Parent',
-  children: 'Children',
-  descendants: 'Descendants',
-  farm: 'Farm',
-  neighbourhood: 'Neighbourhood',
-  snapshot: 'Snapshot',
-}
+// The vocabulary is not defined here. It lives in ../family/commands.js, which
+// the plugin's API declaration also names — so what an author may type and what
+// the mounted operation accepts come from one table and cannot drift apart.
+import { valuesFor, clientValues, labels, parseKinds, hasCommand, parseTitle } from '../family/commands.js'
+
+const SERVER_KINDS = valuesFor('kinds')
+const CLIENT_KINDS = clientValues()
+const LABEL = labels()
 
 const expand = text =>
   (text || '')
@@ -76,60 +73,13 @@ const freshness = sitemap => {
 
 const portSuffix = () => ([80, '80', '', null].includes(location.port) ? '' : `:${location.port}`)
 
-// DSL commands (UPPERCASE canonical, optional trailing colon — see the
-// fedwiki-dsl convention) mapped to the internal lowercase kind key.
-// A command maps to one kind, or to several (FAMILY = PARENT + SISTERS together).
-const COMMANDS = {
-  FAMILY: ['parent', 'sisters'],
-  SISTERS: 'sisters',
-  PARENT: 'parent',
-  CHILDREN: 'children',
-  DESCENDANTS: 'descendants',
-  FARM: 'farm',
-  NEIGHBOURHOOD: 'neighbourhood',
-  NEIGHBORHOOD: 'neighbourhood', // accept either spelling
-  SNAPSHOT: 'snapshot',
-}
-
-// Actions are commands that aren't site-kinds — ROSTER, TWIN, WATCH. Each is a
-// bare keyword on its own line, so they never pollute the gathered kinds. ROSTER
-// draws the whole gather compactly (with a button to save it as a roster page);
-// TWIN and WATCH switch the panel to a roster of the family members that hold
-// this page (TWIN by slug, WATCH by an actual fork event in the copy's journal).
-const hasAction = (text, name) =>
-  (text || '').split('\n').some(raw => {
-    const key = raw.trim().split(/\s+/)[0].replace(/:$/, '').toUpperCase()
-    return key === name
-  })
-
-// TITLE <yes|no|true|false|on|off> — whether the ROSTER display shows its title
-// caption. Default: shown. A falsey value hides it (and the edge whitespace stays
-// even, since nothing is left in its place).
-const parseTitle = text => {
-  for (const raw of (text || '').split('\n')) {
-    const parts = raw.trim().split(/\s+/)
-    if (parts[0].replace(/:$/, '').toUpperCase() !== 'TITLE') continue
-    const v = (parts[1] || '').toLowerCase().replace(/:$/, '')
-    return !['no', 'false', 'off', '0', 'hide', 'none'].includes(v)
-  }
-  return true // default: show the title
-}
-
-// item.text -> ordered, de-duplicated list of recognised kinds (default: sisters).
-// Each line: first word is the command; UPPERCASE is canonical, but input case is
-// forgiven, and a single trailing colon (YAML-style) is optional.
-const parseKinds = text => {
-  const kinds = []
-  for (const raw of (text || '').split('\n')) {
-    const line = raw.trim()
-    if (!line) continue
-    const key = line.split(/\s+/)[0].replace(/:$/, '').toUpperCase()
-    const mapped = COMMANDS[key]
-    if (!mapped) continue
-    for (const k of [].concat(mapped)) if (!kinds.includes(k)) kinds.push(k)
-  }
-  return kinds.length ? kinds : ['sisters']
-}
+// parseKinds, hasCommand and parseTitle come from the shared vocabulary above.
+// ROSTER, TWIN and WATCH are bare keywords on their own line, so they never
+// pollute the gathered kinds: ROSTER draws the whole gather compactly (with a
+// button to save it as a roster page); TWIN and WATCH switch the panel to a
+// roster of the family members that hold this page (TWIN by slug, WATCH by an
+// actual fork event in the copy's journal).
+const hasAction = hasCommand
 
 // Display name for a site row. Descendants of the viewing site keep their
 // whole relative name (david.pod.peoplepowered.money seen from
