@@ -1,10 +1,10 @@
-# Federated Wiki - Family Plugin
+# Federated Wiki - Pod Plugin
 
-Plugin type: `family`. Gathers configurable **families of related wiki sites**
+Plugin type: `pod`. Gathers configurable **pods of related wiki sites**
 and adds them to your neighborhood. An augmentation of the
 [Present](https://github.com/wardcunningham/wiki-plugin-present) plugin: instead
 of only listing sister sites, the item text is a list of keywords choosing
-*which* families to gather.
+*which* pods to gather.
 
 ## Commands (one per line in the item text)
 
@@ -14,7 +14,7 @@ a single trailing colon (YAML-style) is optional.
 
 | Command | Gathers | Source |
 |---|---|---|
-| `FAMILY` | `PARENT` + `SISTERS` together (shorthand) | server |
+| `POD` | `PARENT` + `SISTERS` together (shorthand) | server |
 | `SISTERS` | sibling sites sharing the parent domain | server |
 | `PARENT` | the parent-domain site itself | server |
 | `CHILDREN` | direct sub-domains of this site | server |
@@ -26,12 +26,12 @@ a single trailing colon (YAML-style) is optional.
 Example item text:
 
 ```
-FAMILY
+POD
 ```
 
 ## Actions
 
-Actions are not site-kinds — they change what the panel *does* with the family
+Actions are not site-kinds — they change what the panel *does* with the pod
 it gathered. Add one on its own line alongside the kind commands.
 
 | Action | Effect |
@@ -55,7 +55,7 @@ whole gather; `TWIN`/`WATCH` filter it:
 ### Saving a roster page
 
 The `ROSTER` view and the wide table both carry a subtle **❄ icon** in the corner
-that saves the gathered family as a **roster ghost page** titled after the
+that saves the gathered pod as a **roster ghost page** titled after the
 commands (e.g. `PARENT SISTERS Rosters`), one roster item per kind. (There is no
 separate `FREEZE` command — the icon replaces it.)
 
@@ -66,10 +66,10 @@ SISTERS
 WATCH
 ```
 
-Example — a compact roster of the whole family, no title:
+Example — a compact roster of the whole pod, no title:
 
 ```
-FAMILY
+POD
 ROSTER
 TITLE no
 ```
@@ -78,14 +78,14 @@ TITLE no
 
 ```
 npm install
-npm run build      # esbuild: src/client/family.js -> client/family.js
+npm run build      # esbuild: src/client/pod.js -> client/pod.js
 ```
 
 ## How it differs from Present
 
 Present computes peers from the farm *root* (`argv.data`), which misfires in a
-farm laid out as `{farm}/{sub}.{domain}/`. Family derives the origin from the
-*requesting* site (`argv.status`) and resolves each family relative to it.
+farm laid out as `{farm}/{sub}.{domain}/`. Pod derives the origin from the
+*requesting* site (`argv.status`) and resolves each pod relative to it.
 
 ## License
 
@@ -96,15 +96,15 @@ MIT
 The plugin ships no server of its own for this — it declares a specification and
 a module of plain functions, and the Farm Plugin mounts them:
 
-    GET /system/api/family/roll.json?kinds=children,sisters
+    GET /system/api/pod/roll.json?kinds=children,sisters
 
 The answer depends on the site it is asked at, so `origin` and `farmRoot` are
 declared as context in the specification and supplied by the farm. The plugin's
-own route `/plugin/family/roll` is unchanged and still answers identically.
+own route `/plugin/pod/roll` is unchanged and still answers identically.
 
 ## One vocabulary
 
-`src/family/commands.js` is the single table of what a family item's text may
+`src/pod/commands.js` is the single table of what a pod item's text may
 say. The client imports it to parse; the API declaration names it so the farm
 reads the same one. Each command declares which kind it is, because a command
 language is a superset of an interface:
@@ -112,7 +112,7 @@ language is a superset of an interface:
 | Kind | Commands | Reaches the farm |
 |---|---|---|
 | parameter | `SISTERS` `PARENT` `CHILDREN` `DESCENDANTS` `FARM` | yes — a value of `kinds` |
-| macro | `FAMILY` | via `PARENT` + `SISTERS` |
+| macro | `POD` | via `PARENT` + `SISTERS` |
 | presentation | `ROSTER` `TITLE` | no — a drawing choice |
 | client-data | `NEIGHBOURHOOD` `SNAPSHOT` `TWIN` `WATCH` | no — only a browser holds it |
 | alias | `NEIGHBORHOOD` | resolves to `NEIGHBOURHOOD` |

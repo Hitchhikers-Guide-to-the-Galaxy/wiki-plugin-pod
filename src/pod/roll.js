@@ -1,4 +1,4 @@
-// roll.js — what the family plugin knows how to do, as plain functions.
+// roll.js — what the pod plugin knows how to do, as plain functions.
 //
 // No request, no response, no argv, nothing from a web framework. Everything it
 // needs arrives as ordinary values, so the same function answers the plugin's
@@ -12,7 +12,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 
-/** Every family this module can gather, as predicates over farm directory names. */
+/** Every pod this module can gather, as predicates over farm directory names. */
 export const selectorsFor = ({ origin, parentDomain }) => {
   const domainOf = name => name.split('.').slice(1).join('.')
   return {
@@ -41,7 +41,7 @@ const pageCount = (farmRoot, name) =>
 export const parentOf = origin => origin.split('.').slice(1).join('.')
 
 /**
- * Gather the requested families of the site being asked.
+ * Gather the requested pods of the site being asked.
  *
  * `origin` and `farmRoot` are the context: the answer genuinely depends on WHERE
  * the question was asked, which is why they are arguments rather than something

@@ -1,9 +1,9 @@
 {
-  "name": "wiki-plugin-family",
-  "version": "0.8.0",
-  "description": "Federated Wiki - Family Plugin \u2014 gather configurable families of related wiki sites (sisters, parent, children, farm, neighbourhood) into your neighborhood",
+  "name": "wiki-plugin-pod",
+  "version": "1.0.0",
+  "description": "Federated Wiki - Pod Plugin — gather configurable pods of related wiki sites (sisters, parent, children, farm, neighbourhood) into your neighborhood",
   "type": "module",
-  "main": "client/family.js",
+  "main": "client/pod.js",
   "files": [
     "api",
     "client",
@@ -17,7 +17,7 @@
     "test": "node test/vocabulary.mjs"
   },
   "keywords": [
-    "family",
+    "pod",
     "wiki",
     "federated wiki",
     "plugin",
@@ -26,24 +26,23 @@
   ],
   "author": "David Bovill",
   "license": "MIT",
-  "dependencies": {},
   "devDependencies": {
     "esbuild": "^0.25.0"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Hitchhikers-Guide-to-the-Galaxy/wiki-plugin-family.git"
+    "url": "git+https://github.com/Hitchhikers-Guide-to-the-Galaxy/wiki-plugin-pod.git"
   },
   "bugs": {
-    "url": "https://github.com/Hitchhikers-Guide-to-the-Galaxy/wiki-plugin-family/issues"
+    "url": "https://github.com/Hitchhikers-Guide-to-the-Galaxy/wiki-plugin-pod/issues"
   },
-  "homepage": "https://github.com/Hitchhikers-Guide-to-the-Galaxy/wiki-plugin-family#readme",
+  "homepage": "https://github.com/Hitchhikers-Guide-to-the-Galaxy/wiki-plugin-pod#readme",
   "fedwiki": {
     "api": {
       "version": 1,
       "spec": "api/openapi.json",
       "handlers": "api/handlers.js",
-      "vocabulary": "src/family/commands.js"
+      "vocabulary": "src/pod/commands.js"
     }
   }
 }

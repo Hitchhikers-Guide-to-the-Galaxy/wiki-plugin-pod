@@ -1,7 +1,7 @@
-// family plugin — server-side component.
+// pod plugin — server-side component.
 //
 // A thin caller now. Everything it used to know how to do lives in
-// ../src/family/roll.js as plain functions; this file only turns a request into
+// ../src/pod/roll.js as plain functions; this file only turns a request into
 // arguments and a result into JSON. The route it serves is unchanged, so the
 // shipped client keeps calling the address it always called — the migration
 // adds a second way in without disturbing the first.
@@ -31,14 +31,14 @@ const startServer = ({ argv, app }) => {
 
   // Imported once, awaited per request. Kept as the promise so a slow or failed
   // load cannot delay the route being registered.
-  const thinking = import('../src/family/roll.js')
+  const thinking = import('../src/pod/roll.js')
 
-  app.get('/plugin/family/roll', async (req, res) => {
+  app.get('/plugin/pod/roll', async (req, res) => {
     try {
       const { roll } = await thinking
       res.json(await roll({ kinds: req.query.kinds || 'sisters', origin, farmRoot }))
     } catch (e) {
-      console.log('family plugin: roll failed —', e?.stack || e)
+      console.log('pod plugin: roll failed —', e?.stack || e)
       res.status(500).json({ error: e.message })
     }
   })

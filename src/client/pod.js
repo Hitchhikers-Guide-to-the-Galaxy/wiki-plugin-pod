@@ -1,10 +1,10 @@
-// wiki-plugin-family — gather configurable families of related wiki sites.
+// wiki-plugin-pod — gather configurable pods of related wiki sites.
 //
 // Augments the Present plugin: instead of only listing sister sites, the item
-// text is a list of keywords choosing WHICH families of sites to gather and
+// text is a list of keywords choosing WHICH pods of sites to gather and
 // show. Each gathered site is registered as a neighbor so its pages join your
 // search and lineage. Reads the in-browser neighbourhood for the client-side
-// families, and a small server route for the disk-derived ones.
+// pods, and a small server route for the disk-derived ones.
 //
 // Recognised keywords (one per line, in item.text):
 //   sisters        sibling sites sharing the parent domain   (server)
@@ -16,13 +16,13 @@
 //   snapshot       freeze the current neighborhood           (client, v0.1 == neighbourhood)
 //
 // Actions (not site-kinds):
-//   ROSTER         draw the gathered family compactly, mirroring a normal roster
+//   ROSTER         draw the gathered pod compactly, mirroring a normal roster
 //                  item — a left-aligned "<commands> Rosters" title over flowing
 //                  `img.remote` flags in the grey box, instead of the wide
 //                  tables. A ❄ corner icon saves it as a roster ghost page.
 //   TITLE yes|no   whether the ROSTER title shows (default yes). TITLE no hides
 //                  it, leaving even padding around the flags.
-//   TWIN           show a roster of the family members that hold a page with
+//   TWIN           show a roster of the pod members that hold a page with
 //                  THIS page's slug — existence-only, exactly like the
 //                  wiki-client Twins strip: a slug match in the neighbour's
 //                  sitemap, no journal or lineage check.
@@ -36,10 +36,10 @@
 // display command) carries a small ❄ icon that saves the roster page too, so
 // there is no separate FREEZE command.
 
-// The vocabulary is not defined here. It lives in ../family/commands.js, which
+// The vocabulary is not defined here. It lives in ../pod/commands.js, which
 // the plugin's API declaration also names — so what an author may type and what
 // the mounted operation accepts come from one table and cannot drift apart.
-import { valuesFor, clientValues, labels, parseKinds, hasCommand, parseTitle } from '../family/commands.js'
+import { valuesFor, clientValues, labels, parseKinds, hasCommand, parseTitle } from '../pod/commands.js'
 
 const SERVER_KINDS = valuesFor('kinds')
 const CLIENT_KINDS = clientValues()
@@ -77,7 +77,7 @@ const portSuffix = () => ([80, '80', '', null].includes(location.port) ? '' : `:
 // ROSTER, TWIN and WATCH are bare keywords on their own line, so they never
 // pollute the gathered kinds: ROSTER draws the whole gather compactly (with a
 // button to save it as a roster page); TWIN and WATCH switch the panel to a
-// roster of the family members that hold this page (TWIN by slug, WATCH by an
+// roster of the pod members that hold this page (TWIN by slug, WATCH by an
 // actual fork event in the copy's journal).
 const hasAction = hasCommand
 
@@ -103,7 +103,7 @@ const rowHtml = (site, pages, sitemap) => {
 
 const groupHtml = (kind, rows) =>
   `<p class=caption><b>${LABEL[kind]}</b></p>` +
-  `<table width=100% class=family-${kind}>${rows.join('\n')}</table>`
+  `<table width=100% class=pod-${kind}>${rows.join('\n')}</table>`
 
 export const emit = (div, item) => {
   const suffix = portSuffix()
@@ -121,7 +121,7 @@ export const emit = (div, item) => {
   // div's id IS the slug (possibly with a _rev… suffix on a historical view);
   // .data('key') is the lineup key, NOT the slug, so don't use it here.
   const slug = (div.closest('.page').attr('id') || '').split('_rev')[0]
-  // gathered family, captured during render so saveRosters() can reuse it:
+  // gathered pod, captured during render so saveRosters() can reuse it:
   // kind -> ordered list of full domain names
   const gathered = {}
 
@@ -151,8 +151,8 @@ export const emit = (div, item) => {
 
   if (div.closest('.page').hasClass('remote')) {
     div.html(
-      `<div class=family style="background-color:#eee;padding:15px"><center>${expand(item.text)}` +
-      `<p class=caption>Family is only available when viewed on a page's home wiki.</p></div>`,
+      `<div class=pod style="background-color:#eee;padding:15px"><center>${expand(item.text)}` +
+      `<p class=caption>Pod is only available when viewed on a page's home wiki.</p></div>`,
     )
     return
   }
@@ -165,12 +165,12 @@ export const emit = (div, item) => {
   const echo = roster || rosterCmd ? '' : `<center>${expand(item.text)}`
   const status = rosterCmd ? '' : `<p class=caption>gathering…</p>`
   div.html(
-    `<div class=family style="position:relative;background-color:#eee;padding:15px">${echo}` +
+    `<div class=pod style="position:relative;background-color:#eee;padding:15px">${echo}` +
     `${status}<div class=groups>${rosterCmd ? '<i>gathering…</i>' : ''}</div></div>`,
   )
 
   const render = serverGroups => {
-    // Candidate family members per kind, as neighbourhood lookup keys (with the
+    // Candidate pod members per kind, as neighbourhood lookup keys (with the
     // port suffix). Server kinds are registered once here so their sitemaps load;
     // TWIN/WATCH later filter these candidates down to the matching members.
     const candidates = {}
@@ -232,7 +232,7 @@ export const emit = (div, item) => {
       return flags.join(' ') || '<i>none</i>'
     }
 
-    // Non-roster: the full family tables (favicon + name + page count + freshness).
+    // Non-roster: the full pod tables (favicon + name + page count + freshness).
     const buildGroups = () => {
       const html = []
       for (const kind of kinds) {
@@ -253,7 +253,7 @@ export const emit = (div, item) => {
         const flags = buildRoster()
         div.find('.groups').html(flags.join(' '))
         div.find('.caption').first().text(
-          flags.length ? '' : watch ? 'no family watchers yet' : 'no family twins yet',
+          flags.length ? '' : watch ? 'no pod watchers yet' : 'no pod twins yet',
         )
         return
       }
@@ -270,7 +270,7 @@ export const emit = (div, item) => {
     }
     paint()
 
-    // Save the gathered family as a roster ghost page titled after the commands
+    // Save the gathered pod as a roster ghost page titled after the commands
     // (e.g. "SISTERS Rosters"), one roster item per kind. No FREEZE command any
     // more: it's reached from the ❄ icon tucked into the corner of the ROSTER
     // and wide-table views.
@@ -294,11 +294,11 @@ export const emit = (div, item) => {
     // the wide-table views (TWIN / WATCH are monitoring views, so they get none).
     if (rosterCmd || !roster) {
       const icon = $(
-        '<span class=family-freeze-icon title="Display Rosters — save as a roster page" ' +
+        '<span class=pod-freeze-icon title="Display Rosters — save as a roster page" ' +
         'style="position:absolute;top:6px;right:9px;cursor:pointer;font-size:14px;opacity:.55">❄</span>',
       )
       icon.on('click', saveRosters)
-      div.find('.family').append(icon)
+      div.find('.pod').append(icon)
     }
 
     // As each neighbour's sitemap loads: in TWIN/WATCH mode repaint, since a match
@@ -320,7 +320,7 @@ export const emit = (div, item) => {
     return
   }
 
-  fetch(`/plugin/family/roll?kinds=${encodeURIComponent(serverKinds.join(','))}`)
+  fetch(`/plugin/pod/roll?kinds=${encodeURIComponent(serverKinds.join(','))}`)
     .then(res => {
       if (!res.ok) {
         const err = new Error(`HTTP ${res.status}`)
@@ -337,7 +337,7 @@ export const emit = (div, item) => {
       // generic error, so the operator knows where to look.
       const msg =
         err && err.status === 404
-          ? 'family server not loaded — the host wiki may need a restart or a newer wiki-server / Node'
+          ? 'pod server not loaded — the host wiki may need a restart or a newer wiki-server / Node'
           : 'server error'
       div.find('.caption').first().text(msg)
     })
@@ -349,5 +349,5 @@ export const bind = (div, item) => {
 
 if (typeof window !== 'undefined') {
   window.plugins = window.plugins || {}
-  window.plugins.family = { emit, bind }
+  window.plugins.pod = { emit, bind }
 }

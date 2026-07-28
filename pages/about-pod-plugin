@@ -1,0 +1,157 @@
+{
+  "title": "About Pod Plugin",
+  "story": [
+    {
+      "type": "markdown",
+      "id": "be5122a8320d633c",
+      "text": "This plugin, type: **pod**, gathers pods of related wiki sites and adds them to your neighborhood. It augments the Present plugin: instead of only listing sister sites, you choose *which* pods to gather."
+    },
+    {
+      "type": "pod",
+      "id": "01b9d66d009aa2c7",
+      "text": "POD"
+    },
+    {
+      "type": "markdown",
+      "id": "625ddc4e896c6e27",
+      "text": "Write one **command** per line (UPPERCASE, an optional trailing colon \u2014 see the [[Fedwiki DSL Skill]] convention):\n\n- `POD` \u2014 `PARENT` and `SISTERS` together (shorthand)\n- `SISTERS` \u2014 sibling sites sharing the parent domain\n- `PARENT` \u2014 the parent-domain site itself\n- `CHILDREN` \u2014 direct sub-domains of this site\n- `DESCENDANTS` \u2014 all sub-domains, any depth\n- `FARM` \u2014 every wiki in the farm\n- `NEIGHBOURHOOD` \u2014 the sites currently in your neighborhood\n- `SNAPSHOT` \u2014 the current neighborhood *(same as NEIGHBOURHOOD)*\n\nAnd the **actions** (not site-kinds):\n\n- `ROSTER` \u2014 draw the gather compactly, mirroring a normal roster item\n- `TWIN` \u2014 only members that hold a page with **this page's slug**\n- `WATCH` \u2014 only members whose copy is *actually a fork* of it\n- `TITLE yes|no` \u2014 whether the `ROSTER` title shows (default yes)"
+    },
+    {
+      "type": "markdown",
+      "id": "7c1a4e0b9f2d5a86",
+      "text": "### ROSTER, TWIN and WATCH \u2014 compact rosters of flags\n\nAll three render like a **roster item**: the members' flags flow inline in the grey box, each linking to that member's copy of the page, the (sub)domain on hover. `ROSTER` shows the whole gather (mirroring a normal roster, with an optional left-aligned title toggled by `TITLE yes|no`); `TWIN`/`WATCH` filter it:\n\n- **`TWIN`** is **existence-only** \u2014 a slug match in the member's sitemap, like the wiki-client *Twins* strip.\n- **`WATCH`** is **lineage-aware** \u2014 it fetches each twin's page JSON and keeps only those whose journal carries a `fork` event (`WATCH \u2286 TWIN`): who is watching your page.\n\nThe `ROSTER` and table views carry a subtle **\u2744 icon** that saves the gather as a roster ghost page titled after the commands (e.g. `PARENT SISTERS Rosters`). No separate `FREEZE` command.\n\n```\nSISTERS\nWATCH\n```"
+    },
+    {
+      "type": "markdown",
+      "id": "cedff82dadcf82fd",
+      "text": "Each gathered site is registered as a neighbor, so its pages join your search and lineage. The page still reads normally without the plugin."
+    },
+    {
+      "type": "markdown",
+      "id": "c41e9b70a5d8362f",
+      "text": "# Which Commands Cross\n\nA command language is a superset of an interface, never a mirror of one. Of the thirteen words below, five become a value of the `kinds` parameter and one is shorthand for two of those; the rest never leave the browser \u2014 `ROSTER` and `TITLE` because they are drawing choices the farm has no opinion about, and `NEIGHBOURHOOD`, `SNAPSHOT`, `TWIN` and `WATCH` because they read what only a browser holds. That last group is not a gap to be closed: no server could answer them however this plugin were written.\n\nThe table saying which is which lives in one module. The parser imports it and the plugin's interface declaration names it, so what an author may type and what the mounted operation accepts are one list read twice. See [[Pod API]] for the rendered version, and [[About Farm Plugin]] for how a declaration becomes a route."
+    },
+    {
+      "type": "markdown",
+      "id": "47fd6339cb39a685",
+      "text": "## Repositories\n\n- **GitHub**: [Hitchhikers-Guide-to-the-Galaxy/wiki-plugin-pod](https://github.com/Hitchhikers-Guide-to-the-Galaxy/wiki-plugin-pod)\n- **npm**: [wiki-plugin-pod](https://www.npmjs.com/package/wiki-plugin-pod) \u2014 `npm install wiki-plugin-pod`"
+    },
+    {
+      "type": "markdown",
+      "id": "19d5c8a03e6b7412",
+      "text": "# See\n\n[[Pod API]] \u00b7 [[Farm API]] \u00b7 [[About Farm Plugin]] \u00b7 [[Fedwiki DSL Skill]]"
+    }
+  ],
+  "journal": [
+    {
+      "type": "create",
+      "item": {
+        "title": "About Pod Plugin",
+        "story": [
+          {
+            "type": "markdown",
+            "id": "be5122a8320d633c",
+            "text": "This plugin, type: **pod**, gathers pods of related wiki sites and adds them to your neighborhood. It augments the Present plugin: instead of only listing sister sites, you choose *which* pods to gather."
+          },
+          {
+            "type": "pod",
+            "id": "01b9d66d009aa2c7",
+            "text": "POD"
+          },
+          {
+            "type": "markdown",
+            "id": "625ddc4e896c6e27",
+            "text": "Write one **command** per line (UPPERCASE, an optional trailing colon \u2014 see the [[Fedwiki DSL Skill]] convention):\n\n- `POD` \u2014 `PARENT` and `SISTERS` together (shorthand)\n- `SISTERS` \u2014 sibling sites sharing the parent domain\n- `PARENT` \u2014 the parent-domain site itself\n- `CHILDREN` \u2014 direct sub-domains of this site\n- `DESCENDANTS` \u2014 all sub-domains, any depth\n- `FARM` \u2014 every wiki in the farm\n- `NEIGHBOURHOOD` \u2014 the sites currently in your neighborhood\n- `SNAPSHOT` \u2014 freeze the current neighborhood *(same as NEIGHBOURHOOD)*"
+          },
+          {
+            "type": "markdown",
+            "id": "cedff82dadcf82fd",
+            "text": "Each gathered site is registered as a neighbor, so its pages join your search and lineage. The page still reads normally without the plugin."
+          },
+          {
+            "type": "markdown",
+            "id": "47fd6339cb39a685",
+            "text": "## Repositories\n\n- **GitHub**: [Hitchhikers-Guide-to-the-Galaxy/wiki-plugin-pod](https://github.com/Hitchhikers-Guide-to-the-Galaxy/wiki-plugin-pod)\n- **npm**: [wiki-plugin-pod](https://www.npmjs.com/package/wiki-plugin-pod) \u2014 `npm install wiki-plugin-pod`"
+          }
+        ]
+      },
+      "date": 1782310000000,
+      "provenance": "Authored by an AI agent \u2014 Claude Code (claude-opus-4-8) following the fedwiki-create-plugin skill.",
+      "plugin": "pod"
+    },
+    {
+      "type": "edit",
+      "id": "625ddc4e896c6e27",
+      "item": {
+        "type": "markdown",
+        "id": "625ddc4e896c6e27",
+        "text": "Write one **command** per line (UPPERCASE, an optional trailing colon \u2014 see the [[Fedwiki DSL Skill]] convention):\n\n- `POD` \u2014 `PARENT` and `SISTERS` together (shorthand)\n- `SISTERS` \u2014 sibling sites sharing the parent domain\n- `PARENT` \u2014 the parent-domain site itself\n- `CHILDREN` \u2014 direct sub-domains of this site\n- `DESCENDANTS` \u2014 all sub-domains, any depth\n- `FARM` \u2014 every wiki in the farm\n- `NEIGHBOURHOOD` \u2014 the sites currently in your neighborhood\n- `SNAPSHOT` \u2014 freeze the current neighborhood *(same as NEIGHBOURHOOD)*\n\nAnd one **action** (not a site-kind):\n\n- `FREEZE` \u2014 show a button that saves the gathered pod as a **roster ghost page** (one roster item per kind), so an ephemeral panel becomes a forkable page."
+      },
+      "date": 1782642651716
+    },
+    {
+      "type": "edit",
+      "id": "625ddc4e896c6e27",
+      "item": {
+        "type": "markdown",
+        "id": "625ddc4e896c6e27",
+        "text": "Write one **command** per line (UPPERCASE, an optional trailing colon \u2014 see the [[Fedwiki DSL Skill]] convention):\n\n- `POD` \u2014 `PARENT` and `SISTERS` together (shorthand)\n- `SISTERS` \u2014 sibling sites sharing the parent domain\n- `PARENT` \u2014 the parent-domain site itself\n- `CHILDREN` \u2014 direct sub-domains of this site\n- `DESCENDANTS` \u2014 all sub-domains, any depth\n- `FARM` \u2014 every wiki in the farm\n- `NEIGHBOURHOOD` \u2014 the sites currently in your neighborhood\n- `SNAPSHOT` \u2014 freeze the current neighborhood *(same as NEIGHBOURHOOD)*\n\nAnd two **actions** (not site-kinds):\n\n- `FREEZE` \u2014 show a button that saves the gathered pod as a **roster ghost page** (one roster item per kind), so an ephemeral panel becomes a forkable page.\n- `FORK` \u2014 filter the gathered pod down to the members whose sitemap already holds **this page's slug** \u2014 who in your pod has *forked* the page you are viewing."
+      },
+      "date": 1784200000000
+    },
+    {
+      "type": "add",
+      "id": "7c1a4e0b9f2d5a86",
+      "after": "625ddc4e896c6e27",
+      "item": {
+        "type": "markdown",
+        "id": "7c1a4e0b9f2d5a86",
+        "text": "### FORK \u2014 a fork roster\n\n`FORK` is an **existence-only** check, exactly like the wiki-client *Twins* strip: a slug match in a pod member's sitemap, with no journal or lineage inspection. A group with no match is hidden entirely, so the panel only grows an element when a pod member has actually forked the page \u2014 a quiet way to watch who in your pod is twinning your work. Each fork row's flag links straight to that member's copy.\n\n```\nSISTERS\nFORK\n```"
+      },
+      "date": 1784200000000,
+      "provenance": "Authored by an AI agent \u2014 Claude Code (claude-opus-4-8) adding the FORK action."
+    },
+    {
+      "type": "edit",
+      "id": "625ddc4e896c6e27",
+      "item": {
+        "type": "markdown",
+        "id": "625ddc4e896c6e27",
+        "text": "Write one **command** per line (UPPERCASE, an optional trailing colon \u2014 see the [[Fedwiki DSL Skill]] convention):\n\n- `POD` \u2014 `PARENT` and `SISTERS` together (shorthand)\n- `SISTERS` \u2014 sibling sites sharing the parent domain\n- `PARENT` \u2014 the parent-domain site itself\n- `CHILDREN` \u2014 direct sub-domains of this site\n- `DESCENDANTS` \u2014 all sub-domains, any depth\n- `FARM` \u2014 every wiki in the farm\n- `NEIGHBOURHOOD` \u2014 the sites currently in your neighborhood\n- `SNAPSHOT` \u2014 freeze the current neighborhood *(same as NEIGHBOURHOOD)*\n\nAnd the **actions** (not site-kinds):\n\n- `FREEZE` \u2014 show a button that saves the gathered pod as a **roster ghost page** (one roster item per kind), so an ephemeral panel becomes a forkable page.\n- `TWIN` \u2014 show a roster of the pod members that hold a page with **this page's slug**.\n- `FORK` \u2014 show a roster of the pod members whose copy of this page is *actually a fork* of it."
+      },
+      "date": 1784300000000
+    },
+    {
+      "type": "edit",
+      "id": "7c1a4e0b9f2d5a86",
+      "item": {
+        "type": "markdown",
+        "id": "7c1a4e0b9f2d5a86",
+        "text": "### TWIN and FORK \u2014 a roster of who else holds this page\n\nBoth turn the panel into a compact **roster of flags** (like a roster item): the matching members' flags flow inline, each linking to that member's copy of the page, the (sub)domain shown on hover. They differ only in strictness:\n\n- **`TWIN`** is **existence-only**, exactly like the wiki-client *Twins* strip \u2014 a slug match in the member's sitemap, read straight from the neighbourhood.\n- **`FORK`** is **lineage-aware** \u2014 it fetches each twin's page JSON and keeps only those whose journal carries a `fork` event. So a page that merely shares the name is a *twin*, not a *fork* (`FORK \u2286 TWIN`).\n\n```\nSISTERS\nFORK\n```"
+      },
+      "date": 1784300000000,
+      "provenance": "Authored by an AI agent \u2014 Claude Code (claude-opus-4-8) splitting TWIN (existence) from FORK (journal fork event) and switching to a roster-of-flags display."
+    },
+    {
+      "type": "edit",
+      "id": "625ddc4e896c6e27",
+      "item": {
+        "type": "markdown",
+        "id": "625ddc4e896c6e27",
+        "text": "Write one **command** per line (UPPERCASE, an optional trailing colon \u2014 see the [[Fedwiki DSL Skill]] convention):\n\n- `POD` \u2014 `PARENT` and `SISTERS` together (shorthand)\n- `SISTERS` \u2014 sibling sites sharing the parent domain\n- `PARENT` \u2014 the parent-domain site itself\n- `CHILDREN` \u2014 direct sub-domains of this site\n- `DESCENDANTS` \u2014 all sub-domains, any depth\n- `FARM` \u2014 every wiki in the farm\n- `NEIGHBOURHOOD` \u2014 the sites currently in your neighborhood\n- `SNAPSHOT` \u2014 the current neighborhood *(same as NEIGHBOURHOOD)*\n\nAnd the **actions** (not site-kinds):\n\n- `ROSTER` \u2014 draw the gather compactly, mirroring a normal roster item\n- `TWIN` \u2014 only members that hold a page with **this page's slug**\n- `WATCH` \u2014 only members whose copy is *actually a fork* of it\n- `TITLE yes|no` \u2014 whether the `ROSTER` title shows (default yes)"
+      },
+      "date": 1784400000000
+    },
+    {
+      "type": "edit",
+      "id": "7c1a4e0b9f2d5a86",
+      "item": {
+        "type": "markdown",
+        "id": "7c1a4e0b9f2d5a86",
+        "text": "### ROSTER, TWIN and WATCH \u2014 compact rosters of flags\n\nAll three render like a **roster item**: the members' flags flow inline in the grey box, each linking to that member's copy of the page, the (sub)domain on hover. `ROSTER` shows the whole gather (mirroring a normal roster, with an optional left-aligned title toggled by `TITLE yes|no`); `TWIN`/`WATCH` filter it:\n\n- **`TWIN`** is **existence-only** \u2014 a slug match in the member's sitemap, like the wiki-client *Twins* strip.\n- **`WATCH`** is **lineage-aware** \u2014 it fetches each twin's page JSON and keeps only those whose journal carries a `fork` event (`WATCH \u2286 TWIN`): who is watching your page.\n\nThe `ROSTER` and table views carry a subtle **\u2744 icon** that saves the gather as a roster ghost page titled after the commands (e.g. `PARENT SISTERS Rosters`). No separate `FREEZE` command.\n\n```\nSISTERS\nWATCH\n```"
+      },
+      "date": 1784400000000
+    }
+  ],
+  "plugin": "pod"
+}

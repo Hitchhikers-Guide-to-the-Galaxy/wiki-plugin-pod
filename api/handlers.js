@@ -1,5 +1,5 @@
 /**
- * family — the handlers named by the api declaration in package.json.
+ * pod — the handlers named by the api declaration in package.json.
  *
  * Plain functions taking and returning plain values. Nothing here sees a
  * request or a response, imports nothing from express, and reads nothing from
@@ -12,7 +12,7 @@
  * be told where it is being asked should fail loudly rather than guess.
  */
 
-import { roll as gather } from '../src/family/roll.js'
+import { roll as gather } from '../src/pod/roll.js'
 
 export async function roll({ kinds = 'sisters', origin, farmRoot } = {}) {
   if (!origin || !farmRoot) {

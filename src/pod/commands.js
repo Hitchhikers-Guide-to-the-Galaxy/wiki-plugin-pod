@@ -1,6 +1,6 @@
 // commands.js — the plugin's vocabulary, in one place.
 //
-// This module is the single source for what a family item's text may say. The
+// This module is the single source for what a pod item's text may say. The
 // client imports it to parse item text; the plugin's API declaration names it so
 // the farm reads the identical table. There is no second copy to drift, which is
 // the same move that put the plugin's thinking in a module and left only the
@@ -26,7 +26,7 @@
 export const VOCABULARY_VERSION = 1
 
 /** The story item type these commands are written into. An agent needs this to author one. */
-export const ITEM_TYPE = 'family'
+export const ITEM_TYPE = 'pod'
 
 /** What the item does when no command is recognised. */
 export const FALLBACK = ['sisters']
@@ -70,7 +70,7 @@ export const COMMANDS = {
   },
 
   // ---- macro ---------------------------------------------------------------
-  FAMILY: {
+  POD: {
     kind: 'macro',
     expands: ['PARENT', 'SISTERS'],
     description: 'PARENT and SISTERS together (shorthand)',

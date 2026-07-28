@@ -12,7 +12,7 @@
 // produces its declared value, and no command classified as staying in the
 // browser produces anything at all.
 
-import { COMMANDS, ITEM_TYPE, FALLBACK, parseKinds, hasCommand, parseTitle, valuesFor } from '../src/family/commands.js'
+import { COMMANDS, ITEM_TYPE, FALLBACK, parseKinds, hasCommand, parseTitle, valuesFor } from '../src/pod/commands.js'
 
 let failures = 0
 const check = (name, got, want) => {
@@ -51,7 +51,7 @@ check('lowercase accepted', parseKinds('children'), ['children'])
 check('trailing colon accepted', parseKinds('CHILDREN:'), ['children'])
 check('unrecognised line is data', parseKinds('some prose\nFARM'), ['farm'])
 check('nothing recognised', parseKinds(''), FALLBACK)
-check('order preserved, deduped', parseKinds('FARM\nFAMILY\nFARM'), ['farm', 'parent', 'sisters'])
+check('order preserved, deduped', parseKinds('FARM\nPOD\nFARM'), ['farm', 'parent', 'sisters'])
 
 // The two presentation commands the client actually reads.
 check('ROSTER detected', hasCommand('CHILDREN\nROSTER', 'ROSTER'), true)

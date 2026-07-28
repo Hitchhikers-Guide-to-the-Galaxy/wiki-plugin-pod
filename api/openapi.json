@@ -1,16 +1,16 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Family",
+    "title": "Pod",
     "version": "0.8.0",
-    "description": "Report which sites of this farm stand as family to the site being asked \u2014 children, sisters, parent, descendants \u2014 each with a count of the pages it holds. Kinship is read from the name, so the answer depends on where the question is put."
+    "description": "Report which sites of this farm stand as pod to the site being asked \u2014 children, sisters, parent, descendants \u2014 each with a count of the pages it holds. Kinship is read from the name, so the answer depends on where the question is put."
   },
   "paths": {
     "/roll.json": {
       "get": {
         "operationId": "roll",
-        "summary": "Gather families of related sites",
-        "description": "Answers for the site the request arrives at, not for the farm as a whole: asked at a child site, sisters are that child's siblings. Unknown kinds are dropped rather than refused. Read-only. Every family is a neighbourhood, so the site you asked at is never among its own results \u2014 `farm` gives the other sites of the farm, not a census including yourself. For a plain list of everything that exists, including the origin, read x-fedwiki-farm.sites in the merged document.",
+        "summary": "Gather pods of related sites",
+        "description": "Answers for the site the request arrives at, not for the farm as a whole: asked at a child site, sisters are that child's siblings. Unknown kinds are dropped rather than refused. Read-only. Every pod is a neighbourhood, so the site you asked at is never among its own results \u2014 `farm` gives the other sites of the farm, not a census including yourself. For a plain list of everything that exists, including the origin, read x-fedwiki-farm.sites in the merged document.",
         "x-fedwiki-read-only": true,
         "x-fedwiki-context": [
           "origin",
@@ -21,7 +21,7 @@
             "name": "kinds",
             "in": "query",
             "required": false,
-            "description": "Which families to gather, comma separated. Defaults to sisters.",
+            "description": "Which pods to gather, comma separated. Defaults to sisters.",
             "style": "form",
             "explode": false,
             "schema": {
