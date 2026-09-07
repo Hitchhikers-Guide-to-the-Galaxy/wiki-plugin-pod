@@ -109,8 +109,18 @@ a module of plain functions, and the Farm Plugin mounts them:
     GET /system/api/pod/roll.json?kinds=children,sisters
 
 The answer depends on the site it is asked at, so `origin` and `farmRoot` are
-declared as context in the specification and supplied by the farm. The plugin's
-own route `/plugin/pod/roll` is unchanged and still answers identically.
+declared as context in the specification and supplied by the farm. Each group is
+a list of site names.
+
+The plugin's own server asks a smaller question. Kinship is arithmetic on
+names — `src/pod/kinship.js`, imported by the browser and by the API handler
+alike — so the only thing that genuinely needs the disk is what sites exist:
+
+    GET /plugin/pod/sites   →  { origin, parentDomain, sites: [...] }
+
+The browser sorts that list into pods itself. Server code is resident in the
+shared farm process on every site, which makes it the most expensive place to
+put a line; this is the least that has to be there.
 
 ## One vocabulary
 

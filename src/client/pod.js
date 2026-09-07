@@ -1,48 +1,23 @@
 // wiki-plugin-pod — gather configurable pods of related wiki sites.
 //
 // Augments the Present plugin: instead of only listing sister sites, the item
-// text is a list of keywords choosing WHICH pods of sites to gather and
-// show. Each gathered site is registered as a neighbor so its pages join your
-// search and lineage. Reads the in-browser neighbourhood for the client-side
-// pods, and a small server route for the disk-derived ones.
+// text chooses WHICH pods of sites to gather and show. Each gathered site is
+// registered as a neighbor so its pages join your search and lineage.
 //
-// Recognised keywords (one per line, in item.text):
-//   sisters        sibling sites sharing the parent domain   (server)
-//   parent         the parent-domain site itself             (server)
-//   children       direct sub-domains of this site           (server)
-//   descendants    all sub-domains, any depth                (server)
-//   farm           every wiki in the farm                    (server)
-//   neighbourhood  the sites currently in your neighborhood  (client)
-//   snapshot       freeze the current neighborhood           (client, v0.1 == neighbourhood)
+// The commands an author may write are NOT listed here. They live in
+// ../pod/commands.js, which the plugin's API declaration also names, so what an
+// author may type and what the mounted operation accepts come from one table.
+// Restating that table in a comment is how the two drift apart; read the table.
 //
-// Actions (not site-kinds):
-//   ROSTER         draw the gathered pod compactly, mirroring a normal roster
-//                  item — a left-aligned "<commands> Rosters" title over flowing
-//                  `img.remote` flags in the grey box, instead of the wide
-//                  tables. A ❄ corner icon saves it as a roster ghost page.
-//   TITLE yes|no   whether the ROSTER title shows (default yes). TITLE no hides
-//                  it, leaving even padding around the flags.
-//   TWIN           show a roster of the pod members that hold a page with
-//                  THIS page's slug — existence-only, exactly like the
-//                  wiki-client Twins strip: a slug match in the neighbour's
-//                  sitemap, no journal or lineage check.
-//   WATCH          stricter TWIN: show only the members whose copy is actually a
-//                  fork of this page — its journal carries a `fork` event — i.e.
-//                  who is watching (tracking) your page. Fetches each candidate.
-//
-// TWIN and WATCH render like a roster item (flowing flags, the (sub)domain in the
-// hover tooltip); each flag links to that member's copy of the page. ROSTER is
-// the same compact style for the whole (unfiltered) gather. The wider table (no
-// display command) carries a small ❄ icon that saves the roster page too, so
-// there is no separate FREEZE command.
-
-// The vocabulary is not defined here. It lives in ../pod/commands.js, which
-// the plugin's API declaration also names — so what an author may type and what
-// the mounted operation accepts come from one table and cannot drift apart.
-import { valuesFor, clientValues, labels, parseKinds, parseProblems, hasCommand, parseTitle } from '../pod/commands.js'
+// Where each pod comes from: the farm is asked only what sites EXIST, and
+// ../pod/kinship.js — shared with the API handler — sorts them into sisters,
+// parent, children, descendants and farm here in the browser. NEIGHBOURHOOD and
+// SNAPSHOT never leave the browser at all, being the neighbourhood the client
+// has already assembled.
+import { valuesFor, labels, parseKinds, parseProblems, hasCommand, parseTitle } from '../pod/commands.js'
+import { gather } from '../pod/kinship.js'
 
 const SERVER_KINDS = valuesFor('kinds')
-const CLIENT_KINDS = clientValues()
 const LABEL = labels()
 
 const escapeHtml = text =>
@@ -70,23 +45,12 @@ const problemsHtml = problems =>
       `</p>`
     : ''
 
-const elapsed = ms => {
-  const s = Math.floor(ms / 1000)
-  const f = 1.9
-  let out = 'a minute ago'
-  if (s > f * 60) out = `${Math.round(s / 60)} minutes ago`
-  if (s > f * 3600) out = `${Math.round(s / 3600)} hours ago`
-  if (s > f * 86400) out = `${Math.round(s / 86400)} days ago`
-  if (s > f * 604800) out = `${Math.round(s / 604800)} weeks ago`
-  if (s > f * 2592000) out = `${Math.round(s / 2592000)} months ago`
-  if (s > f * 31536000) out = `${Math.round(s / 31536000)} years ago`
-  return out
-}
-
+// How stale a member is, from the dates in its sitemap. The wording is
+// wiki-client's own (wiki.util.formatElapsedTime, as wiki-plugin-activity uses)
+// rather than a second implementation that phrases durations differently.
 const freshness = sitemap => {
-  if (!sitemap) return ''
-  const dates = sitemap.map(p => p.date).filter(d => typeof d === 'number')
-  return dates.length ? elapsed(Date.now() - Math.max(...dates)) : ''
+  const dates = (sitemap || []).map(p => p.date).filter(d => typeof d === 'number')
+  return dates.length ? wiki.util.formatElapsedTime(Math.max(...dates)) : ''
 }
 
 const portSuffix = () => ([80, '80', '', null].includes(location.port) ? '' : `:${location.port}`)
@@ -139,9 +103,10 @@ export const emit = (div, item) => {
   // div's id IS the slug (possibly with a _rev… suffix on a historical view);
   // .data('key') is the lineup key, NOT the slug, so don't use it here.
   const slug = (div.closest('.page').attr('id') || '').split('_rev')[0]
-  // gathered pod, captured during render so saveRosters() can reuse it:
-  // kind -> ordered list of full domain names
-  const gathered = {}
+  // the gathered pod, captured during render so saveRosters() can reuse it:
+  // kind -> neighbourhood keys, which carry the port suffix off port 80
+  const candidates = {}
+  const bare = key => (suffix && key.endsWith(suffix) ? key.slice(0, -suffix.length) : key)
 
   // TWIN test — existence-only: does this neighbour's already-loaded sitemap hold
   // a page with our slug? (Twins' inner test — no journal, no lineage.)
@@ -190,67 +155,49 @@ export const emit = (div, item) => {
     `${status}${warning}<div class=groups>${rosterCmd ? '<i>gathering…</i>' : ''}</div></div>`,
   )
 
-  const render = serverGroups => {
+  const render = (sites, origin) => {
     // Candidate pod members per kind, as neighbourhood lookup keys (with the
-    // port suffix). Server kinds are registered once here so their sitemaps load;
-    // TWIN/WATCH later filter these candidates down to the matching members.
-    const candidates = {}
+    // port suffix). The farm told us only what sites exist; kinship is worked
+    // out here with the module the API handler shares. Server kinds are
+    // registered once so their sitemaps load; TWIN/WATCH later filter these
+    // candidates down to the matching members.
+    const groups = gather(sites, { origin, kinds })
     for (const kind of kinds) {
       if (SERVER_KINDS.includes(kind)) {
-        const roll = serverGroups[kind] || []
-        gathered[kind] = roll.map(r => r.site)
-        candidates[kind] = roll.map(r => r.site + suffix)
+        candidates[kind] = (groups[kind] || []).map(site => site + suffix)
         for (const key of candidates[kind]) wiki.neighborhoodObject.registerNeighbor(key)
       } else {
         // neighbourhood / snapshot — read the live in-browser neighbourhood
-        const sites = Object.keys(wiki.neighborhood)
-        gathered[kind] = sites
-        candidates[kind] = sites
+        candidates[kind] = Object.keys(wiki.neighborhood)
       }
     }
 
-    // TWIN / WATCH render like a roster item: the matching members' flags flowing
-    // inline, deduplicated across kinds, each linking to that member's copy of
-    // THIS page. No titles are shown (every copy is the same page) — the
-    // (sub)domain lives in the hover tooltip. Sitemaps (and, for WATCH, the
-    // fetched page journals) arrive asynchronously, so this is re-run as they
-    // resolve, which is when matches reveal themselves.
-    const buildRoster = () => {
+    /**
+     * The members' flags, flowing inline and deduplicated across kinds — the
+     * markup of a wiki-plugin-roster item exactly: space-separated `img.remote`
+     * in the panel's grey box, the (sub)domain in the hover tooltip.
+     *
+     * One builder serves both flag views because they differ in only two ways:
+     * where a flag leads (ROSTER → each member's welcome page; TWIN/WATCH →
+     * that member's copy of THIS page) and which members appear (ROSTER → all;
+     * TWIN/WATCH → those matching). Sitemaps, and for WATCH the fetched
+     * journals, arrive asynchronously, so this is re-run as they resolve.
+     */
+    const buildFlags = ({ target, filtered }) => {
       const seen = new Set()
       const flags = []
       for (const kind of kinds) {
         for (const key of candidates[kind]) {
-          if (watch) ensureWatchChecked(key, paint) // lazily confirm the fork event
-          if (seen.has(key) || !matches(key)) continue
+          if (filtered && watch) ensureWatchChecked(key, paint) // lazily confirm the fork event
+          if (seen.has(key) || (filtered && !matches(key))) continue
           seen.add(key)
           flags.push(
             `<img class="remote" src="${wiki.site(key).flag()}" ` +
-            `title="${key}" data-site="${key}" data-slug="${slug}">`,
+            `title="${key}" data-site="${key}" data-slug="${target}">`,
           )
         }
       }
       return flags
-    }
-
-    // ROSTER — the whole gather as one compact roster: a single "<commands>
-    // Rosters" caption (the panel's own .caption) over all members' flags. The
-    // markup mirrors the wiki-plugin-roster item exactly: space-separated
-    // `img.remote` flags in the panel's grey box — no extra wrapper — each
-    // linking to that member's welcome page. The ❄ icon saves it as a page.
-    const buildRosterDisplay = () => {
-      const seen = new Set()
-      const flags = []
-      for (const kind of kinds) {
-        for (const key of candidates[kind]) {
-          if (seen.has(key)) continue
-          seen.add(key)
-          flags.push(
-            `<img class="remote" src="${wiki.site(key).flag()}" ` +
-            `title="${key}" data-site="${key}" data-slug="welcome-visitors">`,
-          )
-        }
-      }
-      return flags.join(' ') || '<i>none</i>'
     }
 
     // Non-roster: the full pod tables (favicon + name + page count + freshness).
@@ -258,9 +205,8 @@ export const emit = (div, item) => {
       const html = []
       for (const kind of kinds) {
         const rows = candidates[kind].map(key => {
-          const bare = suffix && key.endsWith(suffix) ? key.slice(0, -suffix.length) : key
           const sm = wiki.neighborhood[key]?.sitemap
-          return rowHtml(bare, sm ? sm.length : 0, sm)
+          return rowHtml(bare(key), sm ? sm.length : 0, sm)
         })
         const empty = SERVER_KINDS.includes(kind) ? '<tr><td><i>none</i>' : '<tr><td><i>empty</i>'
         html.push(groupHtml(kind, rows.length ? rows : [empty]))
@@ -271,7 +217,7 @@ export const emit = (div, item) => {
     const paint = () => {
       if (roster) {
         // TWIN / WATCH — flat, filtered flags
-        const flags = buildRoster()
+        const flags = buildFlags({ target: slug, filtered: true })
         div.find('.groups').html(flags.join(' '))
         div.find('.caption').first().text(
           flags.length ? '' : watch ? 'no pod watchers yet' : 'no pod twins yet',
@@ -283,7 +229,8 @@ export const emit = (div, item) => {
         // the flags — all in the panel's grey box. TITLE off → flags only, even
         // padding all round.
         const title = showTitle ? `${rostersTitle} <br> ` : ''
-        div.find('.groups').html(title + buildRosterDisplay())
+        const flags = buildFlags({ target: 'welcome-visitors', filtered: false })
+        div.find('.groups').html(title + (flags.join(' ') || '<i>none</i>'))
         return
       }
       div.find('.groups').html(buildGroups())
@@ -300,7 +247,7 @@ export const emit = (div, item) => {
         Math.floor(Math.random() * 0xffffffffffff).toString(16).padStart(12, '0')
       const story = [{ type: 'markdown', id: hexId(), text: `# ${rostersTitle}` }]
       for (const kind of kinds) {
-        const domains = gathered[kind] || []
+        const domains = (candidates[kind] || []).map(bare)
         story.push({
           type: 'roster',
           id: hexId(),
@@ -326,22 +273,37 @@ export const emit = (div, item) => {
     // may have just appeared (a member whose sitemap now shows our slug — and for
     // WATCH that also kicks off the journal fetch); otherwise just backfill that
     // member's page-count / freshness cell.
-    $('body').on('new-neighbor-done', (e, site) => {
+    //
+    // The wiki never tells an item it has gone, so this listener unhooks itself
+    // once its div has left the document — otherwise every re-render of the page
+    // leaves another one behind, firing forever against detached markup.
+    let wasMounted = false
+    const onNeighbor = (e, site) => {
+      // Never unhook an item that has not been mounted yet — the wiki can render
+      // into a fragment before attaching it, and a neighbour arriving in that
+      // window would otherwise silence the item for good.
+      if (div[0]?.isConnected) wasMounted = true
+      else if (wasMounted) return $('body').off('new-neighbor-done', onNeighbor)
+      else return
       if (roster) return paint()
       const cell = div.find(`td[data-site="${site}"]`)
       if (!cell.length) return
       const sm = wiki.neighborhood[site]?.sitemap
       if (sm) cell.text(`${sm.length} pages ${freshness(sm)}`)
-    })
+    }
+    $('body').on('new-neighbor-done', onNeighbor)
   }
 
+  // The farm is asked one question — what sites are here — and only when a pod
+  // that comes from disk was requested. NEIGHBOURHOOD and SNAPSHOT need nothing
+  // of it.
   const serverKinds = kinds.filter(k => SERVER_KINDS.includes(k))
   if (serverKinds.length === 0) {
-    render({})
+    render([], location.hostname)
     return
   }
 
-  fetch(`/plugin/pod/roll?kinds=${encodeURIComponent(serverKinds.join(','))}`)
+  fetch('/plugin/pod/sites')
     .then(res => {
       if (!res.ok) {
         const err = new Error(`HTTP ${res.status}`)
@@ -350,7 +312,7 @@ export const emit = (div, item) => {
       }
       return res.json()
     })
-    .then(data => render(data.groups || {}))
+    .then(data => render(data.sites || [], data.origin || location.hostname))
     .catch(err => {
       // A 404 means the plugin's server component never registered its route —
       // almost always an old wiki-server / Node combination that couldn't load

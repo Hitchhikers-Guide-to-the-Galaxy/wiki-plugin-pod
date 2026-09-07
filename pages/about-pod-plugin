@@ -33,6 +33,11 @@
     },
     {
       "type": "markdown",
+      "id": "9bebcef374d5",
+      "text": "### Where a pod comes from\n\nKinship is arithmetic on names, so the farm is asked only what sites exist \u2014 `GET /plugin/pod/sites` \u2014 and the browser sorts that list into sisters, parent, children, descendants and farm itself. The same module does the sorting for the mounted API operation, so an agent and a reader get one answer from one implementation.\n\n`NEIGHBOURHOOD` and `SNAPSHOT` ask the farm nothing at all: they read the neighbourhood the browser has already assembled. Page counts and freshness come from each member's own sitemap, which the browser holds anyway."
+    },
+    {
+      "type": "markdown",
       "id": "c41e9b70a5d8362f",
       "text": "# Which Commands Cross\n\nA command language is a superset of an interface, never a mirror of one. Of the thirteen words below, five become a value of the `kinds` parameter and one is shorthand for two of those; the rest never leave the browser \u2014 `ROSTER` and `TITLE` because they are drawing choices the farm has no opinion about, and `NEIGHBOURHOOD`, `SNAPSHOT`, `TWIN` and `WATCH` because they read what only a browser holds. That last group is not a gap to be closed: no server could answer them however this plugin were written.\n\nThe table saying which is which lives in one module. The parser imports it and the plugin's interface declaration names it, so what an author may type and what the mounted operation accepts are one list read twice. See [[Pod API]] for the rendered version, and [[About Farm Plugin]] for how a declaration becomes a route."
     },
@@ -167,6 +172,17 @@
       },
       "after": "625ddc4e896c6e27",
       "date": 1757000000000
+    },
+    {
+      "type": "add",
+      "id": "9bebcef374d5",
+      "item": {
+        "type": "markdown",
+        "id": "9bebcef374d5",
+        "text": "### Where a pod comes from\n\nKinship is arithmetic on names, so the farm is asked only what sites exist \u2014 `GET /plugin/pod/sites` \u2014 and the browser sorts that list into sisters, parent, children, descendants and farm itself. The same module does the sorting for the mounted API operation, so an agent and a reader get one answer from one implementation.\n\n`NEIGHBOURHOOD` and `SNAPSHOT` ask the farm nothing at all: they read the neighbourhood the browser has already assembled. Page counts and freshness come from each member's own sitemap, which the browser holds anyway."
+      },
+      "after": "cedff82dadcf82fd",
+      "date": 1757260000000
     }
   ],
   "plugin": "pod"

@@ -148,12 +148,6 @@ export const valuesFor = parameter =>
     .filter(c => c.kind === 'parameter' && c.parameter === parameter && c.value)
     .map(c => c.value)
 
-/** Kinds gathered in the browser rather than asked of a server. */
-export const clientValues = () =>
-  Object.values(COMMANDS)
-    .filter(c => c.kind === 'client-data' && c.value)
-    .map(c => c.value)
-
 /** Display names, derived so a label is written once beside its command. */
 export const labels = () => {
   const out = {}

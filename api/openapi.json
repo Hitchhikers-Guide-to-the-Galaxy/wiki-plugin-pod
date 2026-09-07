@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Pod",
-    "version": "0.8.0",
-    "description": "Report which sites of this farm stand as pod to the site being asked \u2014 children, sisters, parent, descendants \u2014 each with a count of the pages it holds. Kinship is read from the name, so the answer depends on where the question is put."
+    "version": "1.1.0",
+    "description": "Report which sites of this farm stand as pod to the site being asked \u2014 children, sisters, parent, descendants. Kinship is read from the name, so the answer depends on where the question is put."
   },
   "paths": {
     "/roll.json": {
@@ -38,7 +38,7 @@
         ],
         "responses": {
           "200": {
-            "description": "One group per requested kind, each sorted by site name.",
+            "description": "One group per requested kind, each a list of site names sorted by name.",
             "content": {
               "application/json": {
                 "schema": {
@@ -67,26 +67,14 @@
           },
           "groups": {
             "type": "object",
-            "description": "One key per requested and recognised kind.",
+            "description": "One key per requested and recognised kind; each value is that pod\u2019s site names, sorted.",
             "additionalProperties": {
               "type": "array",
               "items": {
-                "$ref": "#/components/schemas/Member"
+                "type": "string",
+                "description": "A site's domain name."
               }
             }
-          }
-        }
-      },
-      "Member": {
-        "type": "object",
-        "properties": {
-          "site": {
-            "type": "string",
-            "description": "The site's domain name."
-          },
-          "pages": {
-            "type": "integer",
-            "description": "How many pages it holds."
           }
         }
       }

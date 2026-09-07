@@ -12,7 +12,7 @@
  * be told where it is being asked should fail loudly rather than guess.
  */
 
-import { roll as gather } from '../src/pod/roll.js'
+import { roll as gatherPods } from '../src/pod/roll.js'
 
 export async function roll({ kinds = 'sisters', origin, farmRoot } = {}) {
   if (!origin || !farmRoot) {
@@ -20,5 +20,5 @@ export async function roll({ kinds = 'sisters', origin, farmRoot } = {}) {
     err.status = 500
     throw err
   }
-  return gather({ kinds, origin, farmRoot })
+  return gatherPods({ kinds, origin, farmRoot })
 }
