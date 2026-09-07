@@ -4,11 +4,12 @@
 // client imports it to parse item text; the plugin's API declaration names it so
 // the farm reads the identical table. There is no second copy to drift.
 //
-// The PARSER is not here. It is @fortyfoxes/wiki-dsl, bundled at build time and
-// shared with every other plugin whose item text is a small language — this
-// module writes the table and nothing else. What the farm's vocabulary check
-// accepts (the kinds below) is what that parser reads, so a table it can parse
-// is a table the farm can mount.
+// The PARSER is not here, and neither is an import of it. The FARM loads this
+// module server-side to read the table, so it must be data and nothing else —
+// an import of @fortyfoxes/wiki-dsl here would need that package installed on
+// every farm, and a vocabulary that fails to load is dropped from the farm's
+// merged document entirely. The parser is bound in ./vocabulary.js, which only
+// the browser and the tests load.
 //
 // A DSL is a superset of an API, never a mirror of one — so every command
 // declares which KIND it is, and only some kinds cross to HTTP:
@@ -22,8 +23,6 @@
 // Adding a command here is the whole change: the parser, the API's allowed
 // values, the rendered reference page and the plugin's own documentation all
 // read this table.
-
-import { dsl } from '@fortyfoxes/wiki-dsl'
 
 export const VOCABULARY_VERSION = 1
 
@@ -137,16 +136,3 @@ export const COMMANDS = {
     description: 'moved: which pod members have forked this page',
   },
 }
-
-/** What a retired command became, or undefined for a live one. */
-export const retirementOf = word => COMMANDS[word]?.retired
-
-/**
- * The parser, bound to this table. Everything here is @fortyfoxes/wiki-dsl —
- * imported rather than written, so pod, and any other plugin with a command
- * table, read their text the same way.
- */
-export const { parseKinds, hasCommand, argumentOf, problems, valuesFor, fieldByValue, canonical, resolve } = dsl(
-  COMMANDS,
-  { fallback: FALLBACK },
-)

@@ -21,7 +21,7 @@
 // pod builds the roster text and hands it to that plugin. The text it builds is
 // also exactly what the ❄ icon saves as a page, so the drawn thing and the saved
 // thing are one string rather than two code paths that must agree.
-import { valuesFor, fieldByValue, parseKinds, problems, hasCommand, argumentOf, retirementOf } from '../pod/commands.js'
+import { valuesFor, fieldByValue, parseKinds, problems, hasCommand, argumentOf, retirementOf } from '../pod/vocabulary.js'
 
 const SERVER_KINDS = valuesFor('kinds')
 const HEADING = fieldByValue('heading')

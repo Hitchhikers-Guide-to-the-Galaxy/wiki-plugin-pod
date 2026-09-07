@@ -1,7 +1,7 @@
 {
   "name": "wiki-plugin-pod",
   "version": "1.2.0",
-  "description": "Federated Wiki - Pod Plugin — gather configurable pods of related wiki sites (sisters, parent, children, descendants, farm, neighbourhood) into your neighborhood, drawn as rosters",
+  "description": "Federated Wiki - Pod Plugin \u2014 gather configurable pods of related wiki sites (sisters, parent, children, descendants, farm, neighbourhood) into your neighborhood, drawn as rosters",
   "type": "module",
   "main": "client/pod.js",
   "files": [
@@ -26,7 +26,7 @@
   "author": "David Bovill",
   "license": "MIT",
   "devDependencies": {
-    "@fortyfoxes/wiki-dsl": "file:../wiki-dsl",
+    "@fortyfoxes/wiki-dsl": "^0.1.0",
     "esbuild": "^0.25.0"
   },
   "repository": {

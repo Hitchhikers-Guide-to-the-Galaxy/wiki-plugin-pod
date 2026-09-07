@@ -19,7 +19,7 @@ import {
   valuesFor,
   fieldByValue,
   retirementOf,
-} from '../src/pod/commands.js'
+} from '../src/pod/vocabulary.js'
 
 let failures = 0
 const check = (name, got, want) => {
