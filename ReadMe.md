@@ -112,15 +112,16 @@ The answer depends on the site it is asked at, so `origin` and `farmRoot` are
 declared as context in the specification and supplied by the farm. Each group is
 a list of site names.
 
-The plugin's own server asks a smaller question. Kinship is arithmetic on
-names — `src/pod/kinship.js`, imported by the browser and by the API handler
-alike — so the only thing that genuinely needs the disk is what sites exist:
+**The browser reads that same mount.** There is no second route wrapping the
+same handler for the client's benefit — the item fetches
+`/system/api/pod/roll.json?kinds=…`, the address an agent uses. So this plugin
+carries no server component, no express route and no CommonJS/ESM loader
+hazard, and `wiki-plugin-farm` is declared in `fedwiki.requires`: without it the
+disk-derived pods say so rather than failing quietly.
 
-    GET /plugin/pod/sites   →  { origin, parentDomain, sites: [...] }
-
-The browser sorts that list into pods itself. Server code is resident in the
-shared farm process on every site, which makes it the most expensive place to
-put a line; this is the least that has to be there.
+Kinship itself is arithmetic on names (`src/pod/kinship.js`), and the only thing
+needing the disk is what sites exist — one directory read, no page counts, since
+the client takes counts and freshness from each neighbour's own sitemap.
 
 ## One vocabulary
 

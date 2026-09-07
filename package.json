@@ -1,14 +1,13 @@
 {
   "name": "wiki-plugin-pod",
   "version": "1.1.0",
-  "description": "Federated Wiki - Pod Plugin — gather configurable pods of related wiki sites (sisters, parent, children, farm, neighbourhood) into your neighborhood",
+  "description": "Federated Wiki - Pod Plugin \u2014 gather configurable pods of related wiki sites (sisters, parent, children, farm, neighbourhood) into your neighborhood",
   "type": "module",
   "main": "client/pod.js",
   "files": [
     "api",
     "client",
     "pages",
-    "server",
     "src",
     "factory.json"
   ],
@@ -43,6 +42,17 @@
       "spec": "api/openapi.json",
       "handlers": "api/handlers.js",
       "vocabulary": "src/pod/commands.js"
+    },
+    "requires": {
+      "plugins": [
+        {
+          "package": "wiki-plugin-farm",
+          "seat": "wiki-plugin-farm",
+          "range": ">=0.8.0",
+          "level": "required",
+          "why": "pod ships no server of its own: the Farm Plugin mounts its specification and handlers at /system/api/pod/roll.json, which is where the item reads its disk-derived pods."
+        }
+      ]
     }
   }
 }

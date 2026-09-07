@@ -9,13 +9,16 @@
 // author may type and what the mounted operation accepts come from one table.
 // Restating that table in a comment is how the two drift apart; read the table.
 //
-// Where each pod comes from: the farm is asked only what sites EXIST, and
-// ../pod/kinship.js — shared with the API handler — sorts them into sisters,
-// parent, children, descendants and farm here in the browser. NEIGHBOURHOOD and
-// SNAPSHOT never leave the browser at all, being the neighbourhood the client
-// has already assembled.
+// Where each pod comes from: this plugin ships NO server. It declares a
+// specification and a module of plain functions (api/, src/pod/), and the Farm
+// Plugin mounts them — so the disk-derived pods are read from that mount,
+// /system/api/pod/roll.json, the same address an agent uses. A second route of
+// our own, wrapping the same handler for the browser's benefit, is the thing
+// this plugin used to carry and no longer needs.
+//
+// NEIGHBOURHOOD and SNAPSHOT never leave the browser at all, being the
+// neighbourhood the client has already assembled.
 import { valuesFor, labels, parseKinds, parseProblems, hasCommand, parseTitle } from '../pod/commands.js'
-import { gather } from '../pod/kinship.js'
 
 const SERVER_KINDS = valuesFor('kinds')
 const LABEL = labels()
@@ -155,13 +158,11 @@ export const emit = (div, item) => {
     `${status}${warning}<div class=groups>${rosterCmd ? '<i>gathering…</i>' : ''}</div></div>`,
   )
 
-  const render = (sites, origin) => {
+  const render = groups => {
     // Candidate pod members per kind, as neighbourhood lookup keys (with the
-    // port suffix). The farm told us only what sites exist; kinship is worked
-    // out here with the module the API handler shares. Server kinds are
-    // registered once so their sitemaps load; TWIN/WATCH later filter these
-    // candidates down to the matching members.
-    const groups = gather(sites, { origin, kinds })
+    // port suffix). Server kinds are registered once here so their sitemaps
+    // load; TWIN/WATCH later filter these candidates down to the matching
+    // members.
     for (const kind of kinds) {
       if (SERVER_KINDS.includes(kind)) {
         candidates[kind] = (groups[kind] || []).map(site => site + suffix)
@@ -294,16 +295,15 @@ export const emit = (div, item) => {
     $('body').on('new-neighbor-done', onNeighbor)
   }
 
-  // The farm is asked one question — what sites are here — and only when a pod
-  // that comes from disk was requested. NEIGHBOURHOOD and SNAPSHOT need nothing
-  // of it.
+  // Only the disk-derived pods need asking; NEIGHBOURHOOD and SNAPSHOT are
+  // already in the browser.
   const serverKinds = kinds.filter(k => SERVER_KINDS.includes(k))
   if (serverKinds.length === 0) {
-    render([], location.hostname)
+    render({})
     return
   }
 
-  fetch('/plugin/pod/sites')
+  fetch(`/system/api/pod/roll.json?kinds=${encodeURIComponent(serverKinds.join(','))}`)
     .then(res => {
       if (!res.ok) {
         const err = new Error(`HTTP ${res.status}`)
@@ -312,15 +312,15 @@ export const emit = (div, item) => {
       }
       return res.json()
     })
-    .then(data => render(data.sites || [], data.origin || location.hostname))
+    .then(data => render(data.groups || {}))
     .catch(err => {
-      // A 404 means the plugin's server component never registered its route —
-      // almost always an old wiki-server / Node combination that couldn't load
-      // server/server.js (see this plugin's server notes). Say so, rather than a
-      // generic error, so the operator knows where to look.
+      // A 404 means nothing is mounted at that address: this farm has no
+      // wiki-plugin-farm, or it has not been restarted since pod was installed.
+      // Name it, rather than saying "server error", so the operator knows what
+      // to install.
       const msg =
         err && err.status === 404
-          ? 'pod server not loaded — the host wiki may need a restart or a newer wiki-server / Node'
+          ? 'pod needs wiki-plugin-farm on this wiki to mount its API — install it and restart'
           : 'server error'
       div.find('.caption').first().text(msg)
     })

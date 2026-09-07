@@ -34,7 +34,7 @@
     {
       "type": "markdown",
       "id": "9bebcef374d5",
-      "text": "### Where a pod comes from\n\nKinship is arithmetic on names, so the farm is asked only what sites exist \u2014 `GET /plugin/pod/sites` \u2014 and the browser sorts that list into sisters, parent, children, descendants and farm itself. The same module does the sorting for the mounted API operation, so an agent and a reader get one answer from one implementation.\n\n`NEIGHBOURHOOD` and `SNAPSHOT` ask the farm nothing at all: they read the neighbourhood the browser has already assembled. Page counts and freshness come from each member's own sitemap, which the browser holds anyway."
+      "text": "### Where a pod comes from\n\nThis plugin ships **no server**. It declares a specification and a module of plain functions, and the [[Farm Plugin]] mounts them \u2014 so the item reads its disk-derived pods from `/system/api/pod/roll.json`, the same address an agent uses. Kinship is arithmetic on names, and the only thing needing the disk is what sites exist: one directory read, no page counts.\n\n`NEIGHBOURHOOD` and `SNAPSHOT` ask nothing at all \u2014 they read the neighbourhood the browser has already assembled. Page counts and freshness come from each member's own sitemap.\n\nA wiki without the Farm Plugin says so in the panel instead of failing quietly; the requirement is declared in `fedwiki.requires`."
     },
     {
       "type": "markdown",
@@ -183,6 +183,16 @@
       },
       "after": "cedff82dadcf82fd",
       "date": 1757260000000
+    },
+    {
+      "type": "edit",
+      "id": "9bebcef374d5",
+      "item": {
+        "type": "markdown",
+        "id": "9bebcef374d5",
+        "text": "### Where a pod comes from\n\nThis plugin ships **no server**. It declares a specification and a module of plain functions, and the [[Farm Plugin]] mounts them \u2014 so the item reads its disk-derived pods from `/system/api/pod/roll.json`, the same address an agent uses. Kinship is arithmetic on names, and the only thing needing the disk is what sites exist: one directory read, no page counts.\n\n`NEIGHBOURHOOD` and `SNAPSHOT` ask nothing at all \u2014 they read the neighbourhood the browser has already assembled. Page counts and freshness come from each member's own sitemap.\n\nA wiki without the Farm Plugin says so in the panel instead of failing quietly; the requirement is declared in `fedwiki.requires`."
+      },
+      "date": 1757262000000
     }
   ],
   "plugin": "pod"
