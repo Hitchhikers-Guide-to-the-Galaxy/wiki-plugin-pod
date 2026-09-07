@@ -2,13 +2,13 @@
 //
 // This module is the single source for what a pod item's text may say. The
 // client imports it to parse item text; the plugin's API declaration names it so
-// the farm reads the identical table. There is no second copy to drift, which is
-// the same move that put the plugin's thinking in a module and left only the
-// serving in its server.
+// the farm reads the identical table. There is no second copy to drift.
 //
-// The item text convention is fedwiki-wide: UPPERCASE first word is a command,
-// lowercase is data, and a single trailing colon is optional. See the Fedwiki
-// DSL Skill.
+// The PARSER is not here. It is @fortyfoxes/wiki-dsl, bundled at build time and
+// shared with every other plugin whose item text is a small language — this
+// module writes the table and nothing else. What the farm's vocabulary check
+// accepts (the kinds below) is what that parser reads, so a table it can parse
+// is a table the farm can mount.
 //
 // A DSL is a superset of an API, never a mirror of one — so every command
 // declares which KIND it is, and only some kinds cross to HTTP:
@@ -23,6 +23,8 @@
 // values, the rendered reference page and the plugin's own documentation all
 // read this table.
 
+import { dsl } from '@fortyfoxes/wiki-dsl'
+
 export const VOCABULARY_VERSION = 1
 
 /** The story item type these commands are written into. An agent needs this to author one. */
@@ -33,11 +35,16 @@ export const FALLBACK = ['sisters']
 
 export const COMMANDS = {
   // ---- parameter: these become values of the `kinds` parameter -------------
+  //
+  // `heading` is what the drawn group is called. `{site}` is the site the item
+  // is on, because that is what a pod is relative to and the one thing a reader
+  // landing cold cannot work out.
   SISTERS: {
     kind: 'parameter',
     parameter: 'kinds',
     value: 'sisters',
     label: 'Sisters',
+    heading: 'Sisters of {site}',
     description: 'sibling sites sharing the parent domain',
   },
   PARENT: {
@@ -45,6 +52,7 @@ export const COMMANDS = {
     parameter: 'kinds',
     value: 'parent',
     label: 'Parent',
+    heading: 'Parent of {site}',
     description: 'the parent-domain site itself',
   },
   CHILDREN: {
@@ -52,6 +60,7 @@ export const COMMANDS = {
     parameter: 'kinds',
     value: 'children',
     label: 'Children',
+    heading: 'Children of {site}',
     description: 'direct sub-domains of this site',
   },
   DESCENDANTS: {
@@ -59,6 +68,7 @@ export const COMMANDS = {
     parameter: 'kinds',
     value: 'descendants',
     label: 'Descendants',
+    heading: 'Descendants of {site}',
     description: 'all sub-domains, any depth',
   },
   FARM: {
@@ -66,6 +76,7 @@ export const COMMANDS = {
     parameter: 'kinds',
     value: 'farm',
     label: 'Farm',
+    heading: 'The rest of the farm',
     description: 'every wiki in the farm',
   },
 
@@ -81,6 +92,7 @@ export const COMMANDS = {
     kind: 'client-data',
     value: 'neighbourhood',
     label: 'Neighbourhood',
+    heading: 'Your neighbourhood',
     description: 'the sites currently in your neighborhood',
     why: 'reads the neighbourhood the browser has already assembled, which no server can see',
   },
@@ -89,178 +101,52 @@ export const COMMANDS = {
     kind: 'client-data',
     value: 'snapshot',
     label: 'Snapshot',
+    heading: 'Your neighbourhood',
     description: 'freeze the current neighborhood',
     why: 'same browser-only source as NEIGHBOURHOOD',
   },
-  TWIN: {
-    kind: 'client-data',
-    description: "show only members holding a page with this page's slug",
-    why: "matches against each neighbour's own sitemap, fetched from the browser",
-  },
-  WATCH: {
-    kind: 'client-data',
-    description: 'stricter TWIN — only members whose copy is a fork of this page',
-    why: "reads each candidate's page journal, one fetch per neighbour, from the browser",
-  },
 
   // ---- presentation: never leaves the client -------------------------------
-  ROSTER: {
-    kind: 'presentation',
-    description: 'draw the gather compactly, mirroring a normal roster item',
-  },
   TITLE: {
     kind: 'presentation',
     argument: 'yes|no',
     default: true,
-    description: 'whether the ROSTER title shows',
+    description: 'whether each group shows its heading',
+  },
+
+  // ---- retired: kept so pages that say them still parse ---------------------
+  //
+  // A word removed from this table is a word the parser reports as a mistake, so
+  // retiring one by deleting it would put a false "not a pod command" warning on
+  // every page that still says it. These stay, as presentation (the kind the
+  // farm's check allows for a word that never crosses), carrying what became of
+  // them.
+  ROSTER: {
+    kind: 'presentation',
+    retired: 'the default — every pod is drawn as a roster of flags',
+    description: 'no longer needed: rosters are how a pod is drawn',
+  },
+  TWIN: {
+    kind: 'presentation',
+    retired: 'wiki-plugin-twin',
+    description: 'moved: which pod members hold a page with this page’s slug',
+  },
+  WATCH: {
+    kind: 'presentation',
+    retired: 'wiki-plugin-twin',
+    description: 'moved: which pod members have forked this page',
   },
 }
 
-/** Values a trailing TITLE argument may take to mean "no". */
-const FALSEY = ['no', 'false', 'off', '0', 'hide', 'none']
-
-/** Follow an alias to the command it spells. */
-export const resolve = name => {
-  const entry = COMMANDS[name]
-  return entry && entry.kind === 'alias' ? COMMANDS[entry.alias] : entry
-}
-
-/** The canonical name a command resolves to, for reporting. */
-export const canonical = name => {
-  const entry = COMMANDS[name]
-  return entry && entry.kind === 'alias' ? entry.alias : name
-}
+/** What a retired command became, or undefined for a live one. */
+export const retirementOf = word => COMMANDS[word]?.retired
 
 /**
- * The keyword a line begins with, normalised. UPPERCASE is canonical but input
- * case is forgiven, and one trailing colon is optional — never required.
+ * The parser, bound to this table. Everything here is @fortyfoxes/wiki-dsl —
+ * imported rather than written, so pod, and any other plugin with a command
+ * table, read their text the same way.
  */
-export const keywordOf = line =>
-  String(line || '')
-    .trim()
-    .split(/\s+/)[0]
-    .replace(/:$/, '')
-    .toUpperCase()
-
-/** Every value a parameter may take, in declaration order. The API's enum. */
-export const valuesFor = parameter =>
-  Object.values(COMMANDS)
-    .filter(c => c.kind === 'parameter' && c.parameter === parameter && c.value)
-    .map(c => c.value)
-
-/** Display names, derived so a label is written once beside its command. */
-export const labels = () => {
-  const out = {}
-  for (const c of Object.values(COMMANDS)) if (c.value && c.label) out[c.value] = c.label
-  return out
-}
-
-/**
- * Item text to an ordered, de-duplicated list of gathered kinds.
- *
- * Macros expand in place, aliases resolve, unrecognised lines are ignored as
- * data rather than treated as an error. Default when nothing is recognised:
- * sisters.
- */
-export const parseKinds = (text, { fallback = ['sisters'] } = {}) => {
-  const kinds = []
-  const take = name => {
-    const entry = resolve(name)
-    if (!entry) return
-    if (entry.kind === 'macro') return entry.expands.forEach(take)
-    if (!entry.value) return
-    if (!kinds.includes(entry.value)) kinds.push(entry.value)
-  }
-  for (const line of String(text || '').split('\n')) {
-    if (!line.trim()) continue
-    take(keywordOf(line))
-  }
-  return kinds.length ? kinds : [...fallback]
-}
-
-/**
- * A mistyped command is worse than an unknown one: CHIKDREN gathers nothing, so
- * the item quietly falls back to sisters and shows a pod the author never asked
- * for. Nothing about the display says why. So a word that ANNOUNCES itself as a
- * command — the fedwiki convention is an uppercase first word — but names none,
- * is reported as a problem rather than swallowed as data, and where a real
- * command is one or two edits away it is named.
- */
-
-/** Announces itself as a command: uppercase, letters only, two or more. */
-const COMMAND_LIKE = /^[A-Z][A-Z]+$/
-
-/** Levenshtein distance. Only ever run over single short words. */
-const distance = (a, b) => {
-  let prev = Array.from({ length: b.length + 1 }, (_, j) => j)
-  for (let i = 1; i <= a.length; i++) {
-    const row = [i]
-    for (let j = 1; j <= b.length; j++) {
-      row[j] = Math.min(
-        prev[j] + 1,
-        row[j - 1] + 1,
-        prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1),
-      )
-    }
-    prev = row
-  }
-  return prev[b.length]
-}
-
-/**
- * The command a mistyped word most likely meant, or null when nothing is close
- * enough to be worth guessing. Short words are held to a tighter limit, since
- * one edit spans much more of them.
- */
-export const suggest = word => {
-  const w = String(word || '').trim().replace(/:$/, '').toUpperCase()
-  if (!w) return null
-  let best = null
-  let bestDistance = Infinity
-  for (const name of Object.keys(COMMANDS)) {
-    const d = distance(w, name)
-    if (d < bestDistance) {
-      bestDistance = d
-      best = name
-    }
-  }
-  return bestDistance <= (w.length <= 4 ? 1 : 2) ? canonical(best) : null
-}
-
-/**
- * Lines that look like a command and are not one, in order. Each carries the
- * word as written and the command it probably meant (null when unguessable).
- * Parsing is unaffected — this only gives the client something true to say.
- */
-export const parseProblems = text => {
-  const problems = []
-  for (const raw of String(text || '').split('\n')) {
-    const line = raw.trim()
-    if (!line) continue
-    if (resolve(keywordOf(line))) continue
-    const word = line.split(/\s+/)[0].replace(/:$/, '')
-    const suggestion = suggest(word)
-    // Uppercase says "command" out loud; a lone word one typo away from a real
-    // command says it quietly. Ordinary prose says neither and stays data.
-    const alone = line.split(/\s+/).length === 1
-    if (!COMMAND_LIKE.test(word) && !(alone && suggestion)) continue
-    problems.push({ word, suggestion })
-  }
-  return problems
-}
-
-/** Whether a bare command appears on a line of its own. */
-export const hasCommand = (text, name) =>
-  String(text || '')
-    .split('\n')
-    .some(line => canonical(keywordOf(line)) === name)
-
-/** TITLE yes|no — shown unless explicitly turned off. */
-export const parseTitle = text => {
-  for (const raw of String(text || '').split('\n')) {
-    const parts = raw.trim().split(/\s+/)
-    if (canonical(keywordOf(raw)) !== 'TITLE') continue
-    return !FALSEY.includes((parts[1] || '').toLowerCase().replace(/:$/, ''))
-  }
-  return COMMANDS.TITLE.default
-}
+export const { parseKinds, hasCommand, argumentOf, problems, valuesFor, fieldByValue, canonical, resolve } = dsl(
+  COMMANDS,
+  { fallback: FALLBACK },
+)

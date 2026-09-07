@@ -33,54 +33,53 @@ POD
 
 A misspelled command is not swallowed as data. `CHIKDREN` names nothing, so the
 item would otherwise fall back to `SISTERS` and draw a pod nobody asked for.
-Instead the panel says *CHIKDREN — did you mean CHILDREN?* above the gather, in
-every display mode — including `ROSTER`, which does not echo the item text at
-all. A word that announces itself as a command (uppercase, the fedwiki
-convention) but names none is always reported, with a suggestion where a real
-command is within a typo or two. Ordinary lowercase prose stays data.
+Instead the panel says *CHIKDREN — did you mean CHILDREN?* above the gather. A
+word that announces itself as a command (uppercase, the fedwiki convention) but
+names none is always reported, with a suggestion where a real command is within
+a typo or two. Ordinary lowercase prose stays data.
 
-## Actions
+This is not pod's code: it is `@fortyfoxes/wiki-dsl`, so every plugin whose item
+text is a small language gets the same report from the same lines.
 
-Actions are not site-kinds — they change what the panel *does* with the pod
-it gathered. Add one on its own line alongside the kind commands.
+## How it draws
 
-| Action | Effect |
+Every pod is drawn as a **roster**: a heading, then the members' flags. Pod does
+not draw it — `wiki-plugin-roster` does, on every wiki there is, so pod builds
+the roster text and hands it over. The text it builds is exactly what the ❄ icon
+saves as a page, so the drawn thing and the saved thing are one string.
+
+Each group's heading names the site the pod is relative to — *Sisters of
+fedwiki.club*, *Children of ide.earth*, *The rest of the farm*, *Your
+neighbourhood* — which is the one thing a reader landing cold cannot work out.
+
+| Command | Effect |
 |---|---|
-| `ROSTER` | draw the gather compactly, **mirroring a normal roster item** — a left-aligned "&lt;commands&gt; Rosters" title over flowing flags, instead of the wide table |
-| `TWIN` | show only the members that hold a page with **this page's slug** |
-| `WATCH` | show only the members whose copy of this page is *actually a fork* of it — i.e. who is watching (tracking) your page |
-| `TITLE yes\|no` | whether the `ROSTER` title shows (default `yes`). `TITLE no` hides it, keeping even padding around the flags |
+| `TITLE no` | draw the flags with no headings |
 
-`ROSTER`, `TWIN` and `WATCH` all render as a compact **roster of flags** — the
-members' `img.remote` flags flow inline in the grey box, each linking to that
-member's copy of the page, the (sub)domain shown on hover. `ROSTER` shows the
-whole gather; `TWIN`/`WATCH` filter it:
+## Retired commands
 
-- **`TWIN`** is **existence-only**, exactly like the wiki-client *Twins* strip: a
-  slug match in the member's sitemap. Cheap — read straight from the neighbourhood.
-- **`WATCH`** is **lineage-aware**: it fetches each twin's page JSON and keeps only
-  those whose journal carries a `fork` event. So `WATCH ⊆ TWIN` — a page that
-  merely shares the name but was authored independently is a twin, not a fork.
+`ROSTER`, `TWIN` and `WATCH` are kept in the table rather than deleted, because a
+word removed from the table is a word the parser reports as a mistake — and 11
+live items say `ROSTER`, 9 say `TWIN` or `WATCH`. They parse, gather nothing, and
+say what became of them:
 
-### Saving a roster page
+- **`ROSTER`** — the default now. Nothing to say.
+- **`TWIN`** and **`WATCH`** — moved to
+  [wiki-plugin-twin](https://github.com/Hitchhikers-Guide-to-the-Galaxy/wiki-plugin-twin),
+  which asks who holds *this page* rather than who is kin to *this site*.
 
-The `ROSTER` view and the wide table both carry a subtle **❄ icon** in the corner
-that saves the gathered pod as a **roster ghost page** titled after the
-commands (e.g. `PARENT SISTERS Rosters`), one roster item per kind. (There is no
-separate `FREEZE` command — the icon replaces it.)
+## Saving a roster page
 
-Example — watch who among your sisters is tracking the page you're on:
+A subtle **❄ icon** in the corner saves the gathered pod as a **roster page**,
+titled after the groups it holds (e.g. *Parent of ide.earth, Sisters of
+ide.earth*). What it saves is the same roster text the item is drawing, so the
+page is an ordinary roster item that any wiki can read with no pod installed.
+(There is no `FREEZE` command — the icon replaces it.)
 
-```
-SISTERS
-WATCH
-```
-
-Example — a compact roster of the whole pod, no title:
+Example — the whole pod, flags only:
 
 ```
 POD
-ROSTER
 TITLE no
 ```
 
@@ -134,10 +133,15 @@ language is a superset of an interface:
 |---|---|---|
 | parameter | `SISTERS` `PARENT` `CHILDREN` `DESCENDANTS` `FARM` | yes — a value of `kinds` |
 | macro | `POD` | via `PARENT` + `SISTERS` |
-| presentation | `ROSTER` `TITLE` | no — a drawing choice |
-| client-data | `NEIGHBOURHOOD` `SNAPSHOT` `TWIN` `WATCH` | no — only a browser holds it |
+| presentation | `TITLE` | no — a drawing choice |
+| client-data | `NEIGHBOURHOOD` `SNAPSHOT` | no — only a browser holds it |
 | alias | `NEIGHBORHOOD` | resolves to `NEIGHBOURHOOD` |
+| retired | `ROSTER` `TWIN` `WATCH` | no — kept so pages that say them still parse |
 
 The `kinds` parameter's allowed values are derived from that table rather than
-written a second time. `npm test` checks the parser against it; the farm checks
-it against the specification.
+written a second time, and so are the group headings. The **parser** is not
+written here either: it is [@fortyfoxes/wiki-dsl](https://github.com/Hitchhikers-Guide-to-the-Galaxy/wiki-dsl),
+bundled at build time and shared with every other plugin whose item text is a
+small language — including the mistyped-command report. `npm test` checks this
+table; the library has its own tests; the farm checks the table against the
+specification.

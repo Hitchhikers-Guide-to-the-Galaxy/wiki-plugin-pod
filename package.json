@@ -1,7 +1,7 @@
 {
   "name": "wiki-plugin-pod",
-  "version": "1.1.0",
-  "description": "Federated Wiki - Pod Plugin \u2014 gather configurable pods of related wiki sites (sisters, parent, children, farm, neighbourhood) into your neighborhood",
+  "version": "1.2.0",
+  "description": "Federated Wiki - Pod Plugin — gather configurable pods of related wiki sites (sisters, parent, children, descendants, farm, neighbourhood) into your neighborhood, drawn as rosters",
   "type": "module",
   "main": "client/pod.js",
   "files": [
@@ -26,6 +26,7 @@
   "author": "David Bovill",
   "license": "MIT",
   "devDependencies": {
+    "@fortyfoxes/wiki-dsl": "file:../wiki-dsl",
     "esbuild": "^0.25.0"
   },
   "repository": {
@@ -51,6 +52,20 @@
           "range": ">=0.8.0",
           "level": "required",
           "why": "pod ships no server of its own: the Farm Plugin mounts its specification and handlers at /system/api/pod/roll.json, which is where the item reads its disk-derived pods."
+        },
+        {
+          "package": "wiki-plugin-roster",
+          "seat": "wiki-plugin-roster",
+          "range": ">=0.4.0",
+          "level": "required",
+          "why": "pod draws nothing itself: a gather is a roster, and the roster plugin already draws one on every wiki, so pod builds the roster text and hands it over."
+        },
+        {
+          "package": "wiki-plugin-twin",
+          "seat": "twin",
+          "range": "^0.1.0",
+          "level": "optional",
+          "why": "TWIN and WATCH were split out of pod at 1.2.0; without it those words still parse and say where they went, but nothing shows which sites hold or forked the page."
         }
       ]
     }

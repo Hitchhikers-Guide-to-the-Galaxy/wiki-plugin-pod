@@ -3,16 +3,23 @@
 //   node test/vocabulary.mjs
 //
 // The farm checks the command table against this plugin's specification. It
-// cannot check the parser, because it has no browser and the shipped client is
-// a bundle. So the parser is checked here, against the same table — and because
-// the parser IMPORTS that table rather than keeping a copy, agreeing with it is
-// the default rather than an achievement.
-//
-// What is actually being asserted: every command classified as reaching the farm
-// produces its declared value, and no command classified as staying in the
-// browser produces anything at all.
+// cannot check the parser, because it has no browser and the shipped client is a
+// bundle. The parser itself is @fortyfoxes/wiki-dsl and has its own tests, so
+// what is left to assert here is what only this plugin can know: that its TABLE
+// says what the farm and the client both need it to say.
 
-import { COMMANDS, ITEM_TYPE, FALLBACK, parseKinds, parseProblems, suggest, hasCommand, parseTitle, valuesFor } from '../src/pod/commands.js'
+import {
+  COMMANDS,
+  ITEM_TYPE,
+  FALLBACK,
+  parseKinds,
+  problems,
+  hasCommand,
+  argumentOf,
+  valuesFor,
+  fieldByValue,
+  retirementOf,
+} from '../src/pod/commands.js'
 
 let failures = 0
 const check = (name, got, want) => {
@@ -46,6 +53,32 @@ for (const [word, command] of Object.entries(COMMANDS)) {
   check(`${word} gathers nothing`, parseKinds(word), FALLBACK)
 }
 
+// Every kind that can be drawn declares what its group is called, and every
+// heading that names the site uses the one placeholder the client substitutes.
+const headings = fieldByValue('heading')
+for (const command of Object.values(COMMANDS)) {
+  if (!command.value) continue
+  check(`${command.value} has a heading`, typeof headings[command.value], 'string')
+}
+for (const [value, heading] of Object.entries(headings)) {
+  const ok = !heading.includes('{') || heading.includes('{site}')
+  check(`${value} heading uses only {site}`, ok, true)
+}
+
+// Retired words must still parse. Deleting one would put a false "not a pod
+// command" warning on every page that still says it — 11 items say ROSTER and 9
+// say TWIN or WATCH.
+for (const word of ['ROSTER', 'TWIN', 'WATCH']) {
+  check(`${word} still parses`, problems(word), [])
+  check(`${word} gathers nothing`, parseKinds(word), FALLBACK)
+  check(`${word} says what became of it`, typeof retirementOf(word), 'string')
+  // presentation is the kind the farm's vocabulary check allows for a word that
+  // never crosses; a kind of our own invention would fail validation and the
+  // whole table would be dropped from the farm's merged document.
+  check(`${word} is a kind the farm accepts`, COMMANDS[word].kind, 'presentation')
+}
+check('a live command is not retired', retirementOf('SISTERS'), undefined)
+
 // The convention itself: case forgiven, one trailing colon optional, data ignored.
 check('lowercase accepted', parseKinds('children'), ['children'])
 check('trailing colon accepted', parseKinds('CHILDREN:'), ['children'])
@@ -53,33 +86,15 @@ check('unrecognised line is data', parseKinds('some prose\nFARM'), ['farm'])
 check('nothing recognised', parseKinds(''), FALLBACK)
 check('order preserved, deduped', parseKinds('FARM\nPOD\nFARM'), ['farm', 'parent', 'sisters'])
 
-// The two presentation commands the client actually reads.
+// The commands the client reads directly.
 check('ROSTER detected', hasCommand('CHILDREN\nROSTER', 'ROSTER'), true)
-check('TITLE off', parseTitle('TITLE no'), false)
-check('TITLE default', parseTitle('CHILDREN'), COMMANDS.TITLE.default)
+check('TITLE off', argumentOf('TITLE no', 'TITLE'), false)
+check('TITLE default', argumentOf('CHILDREN', 'TITLE'), COMMANDS.TITLE.default)
 
-// A mistyped command must not pass as data. CHIKDREN gathers nothing — the item
-// still falls back — but the parse now reports it, and names the command it most
-// likely meant, so the display can say why the pod is not the one asked for.
-check('typo gathers nothing', parseKinds('CHIKDREN'), FALLBACK)
-check('typo reported', parseProblems('CHIKDREN'), [{ word: 'CHIKDREN', suggestion: 'CHILDREN' }])
-check('typo reported with trailing colon', parseProblems('CHIKDREN:'), [{ word: 'CHIKDREN', suggestion: 'CHILDREN' }])
-check('lowercase typo reported', parseProblems('chikdren'), [{ word: 'chikdren', suggestion: 'CHILDREN' }])
-check('typo beside a good command', parseKinds('CHIKDREN\nFARM'), ['farm'])
-check('typo still reported beside a good command', parseProblems('CHIKDREN\nFARM').length, 1)
-check('every typo reported, in order', parseProblems('CHIKDREN\nSISTRES').map(p => p.suggestion), ['CHILDREN', 'SISTERS'])
-check('alias typo suggests the canonical spelling', suggest('NEIGHBORHOD'), 'NEIGHBOURHOOD')
-check('unguessable command word reported without a guess', parseProblems('BANANAS'), [{ word: 'BANANAS', suggestion: null }])
-
-// And the other half: ordinary data must not be reported as a broken command.
-check('prose is data, not a problem', parseProblems('some prose about the pod'), [])
-check('blank text has no problems', parseProblems(''), [])
-for (const word of Object.keys(COMMANDS)) {
-  check(`${word} is not a problem`, parseProblems(word), [])
-  check(`${word.toLowerCase()} is not a problem`, parseProblems(word.toLowerCase()), [])
-}
-check('TITLE argument is not a problem', parseProblems('TITLE no'), [])
-check('a real item is clean', parseProblems('PARENT\nCHILDREN\nROSTER\nTITLE no'), [])
+// A typo is still reported through the shared library.
+check('typo reported', problems('CHIKDREN'), [{ word: 'CHIKDREN', suggestion: 'CHILDREN' }])
+check('typo still falls back', parseKinds('CHIKDREN'), FALLBACK)
+check('live item text is clean', problems('POD\n*'), [])
 
 // And the values the API is told to accept are the ones the parser can produce.
 check('kinds enum is what the parser emits', valuesFor('kinds'), parseKinds(

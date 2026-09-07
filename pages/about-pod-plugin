@@ -24,7 +24,12 @@
     {
       "type": "markdown",
       "id": "7c1a4e0b9f2d5a86",
-      "text": "### ROSTER, TWIN and WATCH \u2014 compact rosters of flags\n\nAll three render like a **roster item**: the members' flags flow inline in the grey box, each linking to that member's copy of the page, the (sub)domain on hover. `ROSTER` shows the whole gather (mirroring a normal roster, with an optional left-aligned title toggled by `TITLE yes|no`); `TWIN`/`WATCH` filter it:\n\n- **`TWIN`** is **existence-only** \u2014 a slug match in the member's sitemap, like the wiki-client *Twins* strip.\n- **`WATCH`** is **lineage-aware** \u2014 it fetches each twin's page JSON and keeps only those whose journal carries a `fork` event (`WATCH \u2286 TWIN`): who is watching your page.\n\nThe `ROSTER` and table views carry a subtle **\u2744 icon** that saves the gather as a roster ghost page titled after the commands (e.g. `PARENT SISTERS Rosters`). No separate `FREEZE` command.\n\n```\nSISTERS\nWATCH\n```"
+      "text": "### How it draws\n\nEvery pod is a **roster**: a heading, then the members' flags. Pod does not draw it \u2014 the [[Roster Plugin]] does, on every wiki there is, so pod builds the roster text and hands it over. The text it builds is exactly what the \u2744 icon saves as a page, so the drawn thing and the saved thing are one string.\n\nEach heading names the site the pod is relative to \u2014 *Sisters of fedwiki.club*, *The rest of the farm*, *Your neighbourhood*. `TITLE no` draws the flags with no headings at all."
+    },
+    {
+      "type": "markdown",
+      "id": "775aabdf4879ebab",
+      "text": "### Retired commands\n\n`ROSTER`, `TWIN` and `WATCH` stay in the table rather than being deleted, because a word removed from the table is a word the parser reports as a mistake \u2014 and pages still say them. They parse, gather nothing, and say what became of them.\n\n`ROSTER` is the default now. `TWIN` and `WATCH` moved to the [[Twin Plugin]], which asks who holds *this page* rather than who is kin to *this site*."
     },
     {
       "type": "markdown",
@@ -49,7 +54,7 @@
     {
       "type": "markdown",
       "id": "19d5c8a03e6b7412",
-      "text": "# See\n\n[[Pod API]] \u00b7 [[Farm API]] \u00b7 [[About Farm Plugin]] \u00b7 [[Fedwiki DSL Skill]]"
+      "text": "# See\n\n[[Twin Plugin]] \u00b7 [[Roster Plugin]] \u00b7 [[Pod API]] \u00b7 [[Farm API]] \u00b7 [[About Farm Plugin]] \u00b7 [[Fedwiki DSL Skill]]"
     }
   ],
   "journal": [
@@ -193,6 +198,37 @@
         "text": "### Where a pod comes from\n\nThis plugin ships **no server**. It declares a specification and a module of plain functions, and the [[Farm Plugin]] mounts them \u2014 so the item reads its disk-derived pods from `/system/api/pod/roll.json`, the same address an agent uses. Kinship is arithmetic on names, and the only thing needing the disk is what sites exist: one directory read, no page counts.\n\n`NEIGHBOURHOOD` and `SNAPSHOT` ask nothing at all \u2014 they read the neighbourhood the browser has already assembled. Page counts and freshness come from each member's own sitemap.\n\nA wiki without the Farm Plugin says so in the panel instead of failing quietly; the requirement is declared in `fedwiki.requires`."
       },
       "date": 1757262000000
+    },
+    {
+      "type": "edit",
+      "id": "7c1a4e0b9f2d5a86",
+      "item": {
+        "type": "markdown",
+        "id": "7c1a4e0b9f2d5a86",
+        "text": "### How it draws\n\nEvery pod is a **roster**: a heading, then the members' flags. Pod does not draw it \u2014 the [[Roster Plugin]] does, on every wiki there is, so pod builds the roster text and hands it over. The text it builds is exactly what the \u2744 icon saves as a page, so the drawn thing and the saved thing are one string.\n\nEach heading names the site the pod is relative to \u2014 *Sisters of fedwiki.club*, *The rest of the farm*, *Your neighbourhood*. `TITLE no` draws the flags with no headings at all."
+      },
+      "date": 1788799155315
+    },
+    {
+      "type": "add",
+      "id": "775aabdf4879ebab",
+      "item": {
+        "type": "markdown",
+        "id": "775aabdf4879ebab",
+        "text": "### Retired commands\n\n`ROSTER`, `TWIN` and `WATCH` stay in the table rather than being deleted, because a word removed from the table is a word the parser reports as a mistake \u2014 and pages still say them. They parse, gather nothing, and say what became of them.\n\n`ROSTER` is the default now. `TWIN` and `WATCH` moved to the [[Twin Plugin]], which asks who holds *this page* rather than who is kin to *this site*."
+      },
+      "after": "7c1a4e0b9f2d5a86",
+      "date": 1788799155315
+    },
+    {
+      "type": "edit",
+      "id": "19d5c8a03e6b7412",
+      "item": {
+        "type": "markdown",
+        "id": "19d5c8a03e6b7412",
+        "text": "# See\n\n[[Twin Plugin]] \u00b7 [[Roster Plugin]] \u00b7 [[Pod API]] \u00b7 [[Farm API]] \u00b7 [[About Farm Plugin]] \u00b7 [[Fedwiki DSL Skill]]"
+      },
+      "date": 1788799155315
     }
   ],
   "plugin": "pod"
