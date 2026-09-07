@@ -79,16 +79,21 @@ export const emit = (div, item) => {
 
   div.html(`${notes}<div class=pod-gather><p class=caption>gathering…</p></div>`)
 
-  // The roster text: a heading line, then one domain per line, a blank line
-  // between groups. That is wiki-plugin-roster's own markup — categories are the
-  // lines that are not domains — so this same string draws the item and, saved,
-  // becomes an ordinary roster item on a page any wiki can read.
+  // The roster text: a heading, a BLANK LINE, then one domain per line, and a
+  // blank line again between groups. That is wiki-plugin-roster's own markup —
+  // categories are the lines that are not domains, and a blank line starts a new
+  // display line, which is what puts the heading on a line of its own with the
+  // flags in a row beneath it. Without the blank line roster runs them together:
+  // "Sisters of demo.localhost [flag] [flag]" on one line.
+  //
+  // This same string draws the item and, saved, becomes an ordinary roster item
+  // on a page any wiki can read.
   const rosterText = (groups, origin) =>
     kinds
       .map(kind => {
         const sites = groups[kind] || []
         if (!sites.length) return ''
-        const heading = showHeadings ? (HEADING[kind] || kind).replace('{site}', origin) + '\n' : ''
+        const heading = showHeadings ? (HEADING[kind] || kind).replace('{site}', origin) + '\n\n' : ''
         return heading + sites.join('\n')
       })
       .filter(Boolean)
