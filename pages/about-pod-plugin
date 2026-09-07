@@ -14,7 +14,7 @@
     {
       "type": "markdown",
       "id": "625ddc4e896c6e27",
-      "text": "Write one **command** per line (UPPERCASE, an optional trailing colon \u2014 see the [[Fedwiki DSL Skill]] convention):\n\n- `POD` \u2014 `PARENT` and `SISTERS` together (shorthand)\n- `SISTERS` \u2014 sibling sites sharing the parent domain\n- `PARENT` \u2014 the parent-domain site itself\n- `CHILDREN` \u2014 direct sub-domains of this site\n- `DESCENDANTS` \u2014 all sub-domains, any depth\n- `FARM` \u2014 every wiki in the farm\n- `NEIGHBOURHOOD` \u2014 the sites currently in your neighborhood\n- `SNAPSHOT` \u2014 the current neighborhood *(same as NEIGHBOURHOOD)*\n\nAnd the **actions** (not site-kinds):\n\n- `ROSTER` \u2014 draw the gather compactly, mirroring a normal roster item\n- `TWIN` \u2014 only members that hold a page with **this page's slug**\n- `WATCH` \u2014 only members whose copy is *actually a fork* of it\n- `TITLE yes|no` \u2014 whether the `ROSTER` title shows (default yes)"
+      "text": "Write one **command** per line (UPPERCASE, an optional trailing colon \u2014 see the [[Fedwiki DSL Skill]] convention):\n\n- `POD` \u2014 `PARENT` and `SISTERS` together (shorthand)\n- `SISTERS` \u2014 sibling sites sharing the parent domain\n- `PARENT` \u2014 the parent-domain site itself\n- `CHILDREN` \u2014 direct sub-domains of this site\n- `DESCENDANTS` \u2014 all sub-domains, any depth\n- `FARM` \u2014 every wiki in the farm\n- `NEIGHBOURHOOD` \u2014 the sites currently in your neighborhood\n- `SNAPSHOT` \u2014 the current neighborhood *(same as NEIGHBOURHOOD)*\n\nAnd one drawing choice:\n\n- `TITLE yes|no` \u2014 whether each group shows its heading (default yes)"
     },
     {
       "type": "markdown",
@@ -44,7 +44,7 @@
     {
       "type": "markdown",
       "id": "c41e9b70a5d8362f",
-      "text": "# Which Commands Cross\n\nA command language is a superset of an interface, never a mirror of one. Of the thirteen words below, five become a value of the `kinds` parameter and one is shorthand for two of those; the rest never leave the browser \u2014 `ROSTER` and `TITLE` because they are drawing choices the farm has no opinion about, and `NEIGHBOURHOOD`, `SNAPSHOT`, `TWIN` and `WATCH` because they read what only a browser holds. That last group is not a gap to be closed: no server could answer them however this plugin were written.\n\nThe table saying which is which lives in one module. The parser imports it and the plugin's interface declaration names it, so what an author may type and what the mounted operation accepts are one list read twice. See [[Pod API]] for the rendered version, and [[About Farm Plugin]] for how a declaration becomes a route."
+      "text": "# Which Commands Cross\n\nA command language is a superset of an interface, never a mirror of one. Of the thirteen words in the table, five become a value of the `kinds` parameter and one is shorthand for two of those; the rest never leave the browser \u2014 `TITLE` because it is a drawing choice the farm has no opinion about, `NEIGHBOURHOOD` and `SNAPSHOT` because they read what only a browser holds, and `ROSTER`, `TWIN` and `WATCH` because they are retired and answer nothing. That second group is not a gap to be closed: no server could answer them however this plugin were written.\n\nThe table saying which is which lives in one module, `src/pod/commands.js` \u2014 data with no imports, because the [[Farm Plugin]] loads it server-side. The parser that reads it is `@fortyfoxes/wiki-dsl`, shared with every other plugin whose item text is a small language."
     },
     {
       "type": "markdown",
@@ -229,6 +229,26 @@
         "text": "# See\n\n[[Twin Plugin]] \u00b7 [[Roster Plugin]] \u00b7 [[Pod API]] \u00b7 [[Farm API]] \u00b7 [[About Farm Plugin]] \u00b7 [[Fedwiki DSL Skill]]"
       },
       "date": 1788799155315
+    },
+    {
+      "type": "edit",
+      "id": "625ddc4e896c6e27",
+      "item": {
+        "type": "markdown",
+        "id": "625ddc4e896c6e27",
+        "text": "Write one **command** per line (UPPERCASE, an optional trailing colon \u2014 see the [[Fedwiki DSL Skill]] convention):\n\n- `POD` \u2014 `PARENT` and `SISTERS` together (shorthand)\n- `SISTERS` \u2014 sibling sites sharing the parent domain\n- `PARENT` \u2014 the parent-domain site itself\n- `CHILDREN` \u2014 direct sub-domains of this site\n- `DESCENDANTS` \u2014 all sub-domains, any depth\n- `FARM` \u2014 every wiki in the farm\n- `NEIGHBOURHOOD` \u2014 the sites currently in your neighborhood\n- `SNAPSHOT` \u2014 the current neighborhood *(same as NEIGHBOURHOOD)*\n\nAnd one drawing choice:\n\n- `TITLE yes|no` \u2014 whether each group shows its heading (default yes)"
+      },
+      "date": 1788801820003
+    },
+    {
+      "type": "edit",
+      "id": "c41e9b70a5d8362f",
+      "item": {
+        "type": "markdown",
+        "id": "c41e9b70a5d8362f",
+        "text": "# Which Commands Cross\n\nA command language is a superset of an interface, never a mirror of one. Of the thirteen words in the table, five become a value of the `kinds` parameter and one is shorthand for two of those; the rest never leave the browser \u2014 `TITLE` because it is a drawing choice the farm has no opinion about, `NEIGHBOURHOOD` and `SNAPSHOT` because they read what only a browser holds, and `ROSTER`, `TWIN` and `WATCH` because they are retired and answer nothing. That second group is not a gap to be closed: no server could answer them however this plugin were written.\n\nThe table saying which is which lives in one module, `src/pod/commands.js` \u2014 data with no imports, because the [[Farm Plugin]] loads it server-side. The parser that reads it is `@fortyfoxes/wiki-dsl`, shared with every other plugin whose item text is a small language."
+      },
+      "date": 1788801820003
     }
   ],
   "plugin": "pod"
