@@ -29,6 +29,16 @@ Example item text:
 POD
 ```
 
+### Mistyped commands
+
+A misspelled command is not swallowed as data. `CHIKDREN` names nothing, so the
+item would otherwise fall back to `SISTERS` and draw a pod nobody asked for.
+Instead the panel says *CHIKDREN — did you mean CHILDREN?* above the gather, in
+every display mode — including `ROSTER`, which does not echo the item text at
+all. A word that announces itself as a command (uppercase, the fedwiki
+convention) but names none is always reported, with a suggestion where a real
+command is within a typo or two. Ordinary lowercase prose stays data.
+
 ## Actions
 
 Actions are not site-kinds — they change what the panel *does* with the pod

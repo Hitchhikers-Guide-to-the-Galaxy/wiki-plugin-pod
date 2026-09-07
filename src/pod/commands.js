@@ -184,6 +184,77 @@ export const parseKinds = (text, { fallback = ['sisters'] } = {}) => {
   return kinds.length ? kinds : [...fallback]
 }
 
+/**
+ * A mistyped command is worse than an unknown one: CHIKDREN gathers nothing, so
+ * the item quietly falls back to sisters and shows a pod the author never asked
+ * for. Nothing about the display says why. So a word that ANNOUNCES itself as a
+ * command — the fedwiki convention is an uppercase first word — but names none,
+ * is reported as a problem rather than swallowed as data, and where a real
+ * command is one or two edits away it is named.
+ */
+
+/** Announces itself as a command: uppercase, letters only, two or more. */
+const COMMAND_LIKE = /^[A-Z][A-Z]+$/
+
+/** Levenshtein distance. Only ever run over single short words. */
+const distance = (a, b) => {
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j)
+  for (let i = 1; i <= a.length; i++) {
+    const row = [i]
+    for (let j = 1; j <= b.length; j++) {
+      row[j] = Math.min(
+        prev[j] + 1,
+        row[j - 1] + 1,
+        prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1),
+      )
+    }
+    prev = row
+  }
+  return prev[b.length]
+}
+
+/**
+ * The command a mistyped word most likely meant, or null when nothing is close
+ * enough to be worth guessing. Short words are held to a tighter limit, since
+ * one edit spans much more of them.
+ */
+export const suggest = word => {
+  const w = String(word || '').trim().replace(/:$/, '').toUpperCase()
+  if (!w) return null
+  let best = null
+  let bestDistance = Infinity
+  for (const name of Object.keys(COMMANDS)) {
+    const d = distance(w, name)
+    if (d < bestDistance) {
+      bestDistance = d
+      best = name
+    }
+  }
+  return bestDistance <= (w.length <= 4 ? 1 : 2) ? canonical(best) : null
+}
+
+/**
+ * Lines that look like a command and are not one, in order. Each carries the
+ * word as written and the command it probably meant (null when unguessable).
+ * Parsing is unaffected — this only gives the client something true to say.
+ */
+export const parseProblems = text => {
+  const problems = []
+  for (const raw of String(text || '').split('\n')) {
+    const line = raw.trim()
+    if (!line) continue
+    if (resolve(keywordOf(line))) continue
+    const word = line.split(/\s+/)[0].replace(/:$/, '')
+    const suggestion = suggest(word)
+    // Uppercase says "command" out loud; a lone word one typo away from a real
+    // command says it quietly. Ordinary prose says neither and stays data.
+    const alone = line.split(/\s+/).length === 1
+    if (!COMMAND_LIKE.test(word) && !(alone && suggestion)) continue
+    problems.push({ word, suggestion })
+  }
+  return problems
+}
+
 /** Whether a bare command appears on a line of its own. */
 export const hasCommand = (text, name) =>
   String(text || '')

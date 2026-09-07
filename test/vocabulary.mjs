@@ -12,7 +12,7 @@
 // produces its declared value, and no command classified as staying in the
 // browser produces anything at all.
 
-import { COMMANDS, ITEM_TYPE, FALLBACK, parseKinds, hasCommand, parseTitle, valuesFor } from '../src/pod/commands.js'
+import { COMMANDS, ITEM_TYPE, FALLBACK, parseKinds, parseProblems, suggest, hasCommand, parseTitle, valuesFor } from '../src/pod/commands.js'
 
 let failures = 0
 const check = (name, got, want) => {
@@ -57,6 +57,29 @@ check('order preserved, deduped', parseKinds('FARM\nPOD\nFARM'), ['farm', 'paren
 check('ROSTER detected', hasCommand('CHILDREN\nROSTER', 'ROSTER'), true)
 check('TITLE off', parseTitle('TITLE no'), false)
 check('TITLE default', parseTitle('CHILDREN'), COMMANDS.TITLE.default)
+
+// A mistyped command must not pass as data. CHIKDREN gathers nothing — the item
+// still falls back — but the parse now reports it, and names the command it most
+// likely meant, so the display can say why the pod is not the one asked for.
+check('typo gathers nothing', parseKinds('CHIKDREN'), FALLBACK)
+check('typo reported', parseProblems('CHIKDREN'), [{ word: 'CHIKDREN', suggestion: 'CHILDREN' }])
+check('typo reported with trailing colon', parseProblems('CHIKDREN:'), [{ word: 'CHIKDREN', suggestion: 'CHILDREN' }])
+check('lowercase typo reported', parseProblems('chikdren'), [{ word: 'chikdren', suggestion: 'CHILDREN' }])
+check('typo beside a good command', parseKinds('CHIKDREN\nFARM'), ['farm'])
+check('typo still reported beside a good command', parseProblems('CHIKDREN\nFARM').length, 1)
+check('every typo reported, in order', parseProblems('CHIKDREN\nSISTRES').map(p => p.suggestion), ['CHILDREN', 'SISTERS'])
+check('alias typo suggests the canonical spelling', suggest('NEIGHBORHOD'), 'NEIGHBOURHOOD')
+check('unguessable command word reported without a guess', parseProblems('BANANAS'), [{ word: 'BANANAS', suggestion: null }])
+
+// And the other half: ordinary data must not be reported as a broken command.
+check('prose is data, not a problem', parseProblems('some prose about the pod'), [])
+check('blank text has no problems', parseProblems(''), [])
+for (const word of Object.keys(COMMANDS)) {
+  check(`${word} is not a problem`, parseProblems(word), [])
+  check(`${word.toLowerCase()} is not a problem`, parseProblems(word.toLowerCase()), [])
+}
+check('TITLE argument is not a problem', parseProblems('TITLE no'), [])
+check('a real item is clean', parseProblems('PARENT\nCHILDREN\nROSTER\nTITLE no'), [])
 
 // And the values the API is told to accept are the ones the parser can produce.
 check('kinds enum is what the parser emits', valuesFor('kinds'), parseKinds(

@@ -1,6 +1,6 @@
 {
   "name": "wiki-plugin-pod",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Federated Wiki - Pod Plugin — gather configurable pods of related wiki sites (sisters, parent, children, farm, neighbourhood) into your neighborhood",
   "type": "module",
   "main": "client/pod.js",

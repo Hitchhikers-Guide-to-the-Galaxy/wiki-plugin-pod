@@ -18,6 +18,11 @@
     },
     {
       "type": "markdown",
+      "id": "4161c30927bd",
+      "text": "### Mistyped commands\n\nA misspelled command is not silently swallowed. `CHIKDREN` names nothing, so the item would otherwise fall back to `SISTERS` and draw a pod nobody asked for. Instead the panel says *CHIKDREN \u2014 did you mean CHILDREN?* above the gather, in every display mode. A word that announces itself as a command \u2014 uppercase, the [[Fedwiki DSL Skill]] convention \u2014 but names none is always reported, even when no real command is close enough to guess. Ordinary lowercase prose stays data."
+    },
+    {
+      "type": "markdown",
       "id": "7c1a4e0b9f2d5a86",
       "text": "### ROSTER, TWIN and WATCH \u2014 compact rosters of flags\n\nAll three render like a **roster item**: the members' flags flow inline in the grey box, each linking to that member's copy of the page, the (sub)domain on hover. `ROSTER` shows the whole gather (mirroring a normal roster, with an optional left-aligned title toggled by `TITLE yes|no`); `TWIN`/`WATCH` filter it:\n\n- **`TWIN`** is **existence-only** \u2014 a slug match in the member's sitemap, like the wiki-client *Twins* strip.\n- **`WATCH`** is **lineage-aware** \u2014 it fetches each twin's page JSON and keeps only those whose journal carries a `fork` event (`WATCH \u2286 TWIN`): who is watching your page.\n\nThe `ROSTER` and table views carry a subtle **\u2744 icon** that saves the gather as a roster ghost page titled after the commands (e.g. `PARENT SISTERS Rosters`). No separate `FREEZE` command.\n\n```\nSISTERS\nWATCH\n```"
     },
@@ -151,6 +156,17 @@
         "text": "### ROSTER, TWIN and WATCH \u2014 compact rosters of flags\n\nAll three render like a **roster item**: the members' flags flow inline in the grey box, each linking to that member's copy of the page, the (sub)domain on hover. `ROSTER` shows the whole gather (mirroring a normal roster, with an optional left-aligned title toggled by `TITLE yes|no`); `TWIN`/`WATCH` filter it:\n\n- **`TWIN`** is **existence-only** \u2014 a slug match in the member's sitemap, like the wiki-client *Twins* strip.\n- **`WATCH`** is **lineage-aware** \u2014 it fetches each twin's page JSON and keeps only those whose journal carries a `fork` event (`WATCH \u2286 TWIN`): who is watching your page.\n\nThe `ROSTER` and table views carry a subtle **\u2744 icon** that saves the gather as a roster ghost page titled after the commands (e.g. `PARENT SISTERS Rosters`). No separate `FREEZE` command.\n\n```\nSISTERS\nWATCH\n```"
       },
       "date": 1784400000000
+    },
+    {
+      "type": "add",
+      "id": "4161c30927bd",
+      "item": {
+        "type": "markdown",
+        "id": "4161c30927bd",
+        "text": "### Mistyped commands\n\nA misspelled command is not silently swallowed. `CHIKDREN` names nothing, so the item would otherwise fall back to `SISTERS` and draw a pod nobody asked for. Instead the panel says *CHIKDREN \u2014 did you mean CHILDREN?* above the gather, in every display mode. A word that announces itself as a command \u2014 uppercase, the [[Fedwiki DSL Skill]] convention \u2014 but names none is always reported, even when no real command is close enough to guess. Ordinary lowercase prose stays data."
+      },
+      "after": "625ddc4e896c6e27",
+      "date": 1757000000000
     }
   ],
   "plugin": "pod"

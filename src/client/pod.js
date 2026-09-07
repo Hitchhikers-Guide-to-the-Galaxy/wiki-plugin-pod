@@ -39,18 +39,36 @@
 // The vocabulary is not defined here. It lives in ../pod/commands.js, which
 // the plugin's API declaration also names — so what an author may type and what
 // the mounted operation accepts come from one table and cannot drift apart.
-import { valuesFor, clientValues, labels, parseKinds, hasCommand, parseTitle } from '../pod/commands.js'
+import { valuesFor, clientValues, labels, parseKinds, parseProblems, hasCommand, parseTitle } from '../pod/commands.js'
 
 const SERVER_KINDS = valuesFor('kinds')
 const CLIENT_KINDS = clientValues()
 const LABEL = labels()
 
-const expand = text =>
+const escapeHtml = text =>
   (text || '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/\*(.+?)\*/g, '<i>$1</i>')
+
+const expand = text => escapeHtml(text).replace(/\*(.+?)\*/g, '<i>$1</i>')
+
+// A mistyped command (CHIKDREN for CHILDREN) is parsed as data, so the item
+// falls back to sisters and draws a pod nobody asked for. Say so above the
+// gather — in every display mode, since ROSTER drops the echo of the item text
+// and would otherwise show no trace of the typo at all.
+const problemsHtml = problems =>
+  problems.length
+    ? `<p class=pod-problem style="color:#a00;font-size:80%;text-align:center;margin:0 0 4px">` +
+      problems
+        .map(p =>
+          p.suggestion
+            ? `${escapeHtml(p.word)} — did you mean <b>${p.suggestion}</b>?`
+            : `${escapeHtml(p.word)} — not a pod command`,
+        )
+        .join('<br>') +
+      `</p>`
+    : ''
 
 const elapsed = ms => {
   const s = Math.floor(ms / 1000)
@@ -164,9 +182,12 @@ export const emit = (div, item) => {
   // even (important when TITLE is off).
   const echo = roster || rosterCmd ? '' : `<center>${expand(item.text)}`
   const status = rosterCmd ? '' : `<p class=caption>gathering…</p>`
+  // After the status caption, so `.caption` first() still finds the status line
+  // the paint steps rewrite.
+  const warning = problemsHtml(parseProblems(item.text))
   div.html(
     `<div class=pod style="position:relative;background-color:#eee;padding:15px">${echo}` +
-    `${status}<div class=groups>${rosterCmd ? '<i>gathering…</i>' : ''}</div></div>`,
+    `${status}${warning}<div class=groups>${rosterCmd ? '<i>gathering…</i>' : ''}</div></div>`,
   )
 
   const render = serverGroups => {
