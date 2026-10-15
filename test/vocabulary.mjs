@@ -91,6 +91,17 @@ check('ROSTER detected', hasCommand('CHILDREN\nROSTER', 'ROSTER'), true)
 check('TITLE off', argumentOf('TITLE no', 'TITLE'), false)
 check('TITLE default', argumentOf('CHILDREN', 'TITLE'), COMMANDS.TITLE.default)
 
+// FORCE — the side effect that used to be unconditional. Absent means off, which
+// is the assertion that the default actually flipped; bare means on; and it
+// gathers nothing either way.
+check('FORCE absent is off', argumentOf('SISTERS', 'FORCE'), false)
+check('FORCE declares that default', COMMANDS.FORCE.default, false)
+check('bare FORCE is on', argumentOf('SISTERS\nFORCE', 'FORCE'), true)
+check('FORCE: yes is on', argumentOf('SISTERS\nFORCE: yes', 'FORCE'), true)
+check('FORCE no is off', argumentOf('SISTERS\nFORCE no', 'FORCE'), false)
+check('FORCE gathers nothing', parseKinds('FORCE'), FALLBACK)
+check('FORCE is not a typo', problems('SISTERS\nFORCE'), [])
+
 // A typo is still reported through the shared library.
 check('typo reported', problems('CHIKDREN'), [{ word: 'CHIKDREN', suggestion: 'CHILDREN' }])
 check('typo still falls back', parseKinds('CHIKDREN'), FALLBACK)

@@ -106,6 +106,16 @@ export const COMMANDS = {
   },
 
   // ---- presentation: never leaves the client -------------------------------
+  //
+  // FORCE is a behaviour switch rather than a drawing choice, but `presentation`
+  // is the closest of the kinds the farm's vocabulary check accepts, and the
+  // thing that matters is true of it: it never crosses to a server.
+  FORCE: {
+    kind: 'presentation',
+    argument: 'yes|no',
+    default: false,
+    description: 'register the gathered sites as neighbours when the page loads',
+  },
   TITLE: {
     kind: 'presentation',
     argument: 'yes|no',

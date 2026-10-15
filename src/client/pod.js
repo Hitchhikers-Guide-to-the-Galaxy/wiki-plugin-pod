@@ -1,8 +1,10 @@
 // wiki-plugin-pod — gather configurable pods of related wiki sites.
 //
 // The item text chooses WHICH pods of sites to gather — sisters, parent,
-// children, descendants, the farm, the neighbourhood — and each gathered site is
-// registered as a neighbor so its pages join your search and lineage.
+// children, descendants, the farm, the neighbourhood — and draws them as a
+// roster of flags. Say FORCE and the gathered sites also join your neighbourhood
+// on load, so their pages join your search and lineage; without it the roster's
+// own » does that when you ask, which is how any other roster behaves.
 //
 // The commands an author may write are NOT listed here. They live in
 // ../pod/commands.js, which the plugin's API declaration also names, so what an
@@ -67,6 +69,7 @@ export const emit = (div, item) => {
   const suffix = portSuffix()
   const kinds = parseKinds(item.text)
   const showHeadings = argumentOf(item.text, 'TITLE')
+  const force = argumentOf(item.text, 'FORCE')
   const notes = problemsHtml(problems(item.text)) + retiredHtml(item.text)
 
   if (div.closest('.page').hasClass('remote')) {
@@ -100,11 +103,16 @@ export const emit = (div, item) => {
       .join('\n\n')
 
   const render = (groups, origin) => {
-    // Register the disk-derived members as neighbours so their pages join search
-    // and lineage — the reason a pod item is worth having on a page at all.
-    for (const kind of kinds) {
-      if (!SERVER_KINDS.includes(kind)) continue
-      for (const site of groups[kind] || []) wiki.neighborhoodObject.registerNeighbor(site + suffix)
+    // FORCE — register the gathered sites as neighbours, so their pages join
+    // your search and lineage. Off by default: a pod is a roster, and a roster
+    // does not reach into your neighbourhood unasked. The roster's own » does it
+    // on demand instead, and the flags are drawn either way — wiki.site().flag()
+    // never consults the neighbourhood.
+    if (force) {
+      for (const kind of kinds) {
+        if (!SERVER_KINDS.includes(kind)) continue
+        for (const site of groups[kind] || []) wiki.neighborhoodObject.registerNeighbor(site + suffix)
+      }
     }
 
     const text = rosterText(groups, origin)
@@ -114,7 +122,18 @@ export const emit = (div, item) => {
 
     wiki.getPlugin('roster', roster => {
       target.empty()
-      roster.emit(target, { type: 'roster', id: `${item.id}-roster`, text })
+      const rosterItem = { type: 'roster', id: `${item.id}-roster`, text }
+      roster.emit(target, rosterItem)
+      // bind() too, or the » roster draws beside each row — "add these N sites
+      // to neighborhood" — is inert markup. With FORCE off that link is the only
+      // way to take the pod into your neighbourhood, so it has to work.
+      //
+      // Its other binding is a dblclick opening a text editor on this synthetic
+      // roster item, which belongs to nothing and would edit a string we
+      // generated. Drop that one; pod binds its own dblclick, on the item, to
+      // edit the pod text an author actually wrote.
+      roster.bind(target, rosterItem)
+      target.off('dblclick')
       // Freeze — the same text, saved as a real roster item on a new page.
       const icon = $(
         '<span class=pod-freeze-icon title="Freeze — save this gather as a roster page" ' +
